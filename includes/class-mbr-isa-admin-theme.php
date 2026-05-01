@@ -382,7 +382,16 @@ class MBR_ISA_Admin_Theme {
                     </div>
                     <div class="mbr-isa-chat__turn mbr-isa-chat__turn--bot">
                         <div class="mbr-isa-chat__bubble-msg">
-                            <?php esc_html_e( 'You can reach us via the contact form in the main menu, or use the link below.', 'mbr-isa' ); ?>
+                            <?php
+                            // Hard-coded sample HTML in preview — escape rules
+                            // don't apply because no user input is involved.
+                            // Includes a sample <a> so the link styling is
+                            // visible per theme.
+                            echo wp_kses(
+                                __( 'You can reach us via the <a href="#" onclick="return false;">contact form</a> in the main menu, or use the link below.', 'mbr-isa' ),
+                                [ 'a' => [ 'href' => true, 'onclick' => true ] ]
+                            );
+                            ?>
                         </div>
                     </div>
                 </div>
@@ -429,7 +438,10 @@ class MBR_ISA_Admin_Theme {
 
         update_option( self::OPTION_KEY, $settings );
 
-        $this->set_notice( 'success', __( 'Appearance settings saved.', 'mbr-isa' ) );
+        $this->set_notice(
+            'success',
+            __( 'Appearance settings saved. <strong>If your changes don\'t appear on the front end immediately</strong>, clear any caching plugins (WP Rocket, SiteGround Optimizer, LiteSpeed, W3 Total Cache, etc.) and any CDN cache, then hard-refresh the front end (Ctrl+Shift+R or Cmd+Shift+R).', 'mbr-isa' )
+        );
         wp_safe_redirect( admin_url( 'tools.php?page=' . self::PAGE_SLUG ) );
         exit;
     }

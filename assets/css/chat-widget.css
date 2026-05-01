@@ -268,6 +268,40 @@
 	border-bottom-left-radius: 4px;
 }
 
+/*
+ * Links inside message bubbles. Intent responses can contain HTML (links,
+ * bold, etc.) from v0.4.0 onwards, so we need explicit styling that wins
+ * over whatever the host theme's `body a` rule sets — otherwise links
+ * inherit the host theme's link colour and become unreadable on light
+ * widget themes (host themes often use white/pale link colours that work
+ * on their own dark backgrounds).
+ *
+ * We use the theme's --mbr-isa-blue accent so links are visually consistent
+ * with the rest of the widget and tuned per preset.
+ */
+.mbr-isa-chat__bubble-msg a {
+	color: var(--mbr-isa-blue);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+	transition: color 0.12s ease, text-decoration-thickness 0.12s ease;
+}
+
+.mbr-isa-chat__bubble-msg a:hover,
+.mbr-isa-chat__bubble-msg a:focus-visible {
+	color: var(--mbr-isa-lavender);
+	text-decoration-thickness: 2px;
+	outline: none;
+}
+
+/* User bubbles use the blue as a background, so a link inside them
+ * (rare — user input is plain text — but defensive) needs to flip
+ * to the contrast text colour. */
+.mbr-isa-chat__turn--user .mbr-isa-chat__bubble-msg a {
+	color: var(--mbr-isa-base);
+	text-decoration: underline;
+}
+
 /* ---------- Confidence badge --------------------------------------------- */
 
 .mbr-isa-chat__badge {

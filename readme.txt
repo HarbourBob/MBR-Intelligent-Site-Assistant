@@ -4,7 +4,7 @@ Tags: search, chatbot, ai, site assistant, intelligent search
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.6.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,11 @@ Key features:
 3. Go to Tools > MBR ISA Diagnostic to verify installation.
 
 == Changelog ==
+
+= 0.6.1 =
+* Fix: Links inside chat message bubbles (intent responses with HTML) now have explicit theme-aware styling, using the active preset's --mbr-isa-blue accent. Previously they inherited the host theme's link colour, which caused unreadable white-on-light-background links on the Slate Light, Ocean, and Sunset presets.
+* Improved: Appearance admin save notice now includes a heads-up about caching layers (page caches, CDN caches, browser cache) since theme changes are commonly masked by stale CSS bundles.
+* Improved: Live preview on the Appearance page now includes a sample link in its bot message, so admins can verify link colour readability per theme without needing to visit the front end.
 
 = 0.6.0 =
 * New: Tools > MBR ISA Appearance admin page for choosing the chat-widget colour scheme without touching CSS.
