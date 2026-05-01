@@ -30,27 +30,6 @@ There's a middle path: a small, local search engine that handles the linguistics
 
 That's what this plugin is.
 
-## Screenshots
-
-<!--
-Drop screenshots into docs/ to populate this section.
-
-Recommended captures:
-  - docs/01-widget-floating.png      The chat widget open on a real page (mocha or your preferred theme)
-  - docs/02-appearance-page.png      The appearance admin page with the gradient preview
-  - docs/03-intents-admin.png        The intents admin page with a couple of intents expanded
-  - docs/04-synonyms-test.png        The synonyms test panel showing token expansion
-  - docs/05-diagnostic.png           The diagnostic page with the three quick-access buttons
--->
-
-| Public widget | Appearance admin |
-|---|---|
-| ![Floating chat widget](docs/01-widget-floating.png) | ![Appearance admin page](docs/02-appearance-page.png) |
-
-| Intents admin | Synonyms test panel |
-|---|---|
-| ![Intents admin page](docs/03-intents-admin.png) | ![Synonyms test panel](docs/04-synonyms-test.png) |
-
 ## Features
 
 **Search and matching**
@@ -86,7 +65,7 @@ Recommended captures:
 
 ## What it isn't
 
-This isn't a large language model and it does not generate text. It retrieves and surfaces content you have already written, and answers a configurable list of canned questions. If a visitor asks about something not on your site, it will politely say it could not find anything and invite them to rephrase.
+This isn't a large language model, and it does not generate text. It retrieves and surfaces content you have already written, and answers a configurable list of canned questions. If a visitor asks about something not on your site, it will politely say it could not find anything and invite them to rephrase.
 
 That is a deliberate trade-off. The plugin produces predictable, auditable responses with no hallucination risk — and it does it without sending your visitors' questions to an outside service. If you need a generative assistant that can free-associate beyond your content, this is not the plugin for you.
 
