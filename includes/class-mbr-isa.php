@@ -19,6 +19,9 @@ require_once MBR_ISA_DIR . 'includes/class-mbr-isa-query-handler.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-rate-limiter.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-rest.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-frontend.php';
+require_once MBR_ISA_DIR . 'includes/class-mbr-isa-admin-intents.php';
+require_once MBR_ISA_DIR . 'includes/class-mbr-isa-admin-synonyms.php';
+require_once MBR_ISA_DIR . 'includes/class-mbr-isa-admin-theme.php';
 
 class MBR_ISA {
 
@@ -34,6 +37,9 @@ class MBR_ISA {
     private $rate_limiter  = null;
     private $rest          = null;
     private $frontend      = null;
+    private $admin_intents = null;
+    private $admin_synonyms = null;
+    private $admin_theme = null;
 
     private function __construct() {}
     private function __clone() {}
@@ -67,6 +73,9 @@ class MBR_ISA {
     private function register_hooks() {
         $this->indexer()->register_hooks();
         $this->frontend()->register_hooks();
+        $this->admin_intents()->register_hooks();
+        $this->admin_synonyms()->register_hooks();
+        $this->admin_theme()->register_hooks();
 
         add_action( 'rest_api_init', [ $this->rest(), 'register_routes' ] );
         add_action( 'admin_menu',    [ $this, 'register_diagnostic_page' ] );
@@ -153,6 +162,27 @@ class MBR_ISA {
             $this->frontend = new MBR_ISA_Frontend();
         }
         return $this->frontend;
+    }
+
+    public function admin_intents() {
+        if ( null === $this->admin_intents ) {
+            $this->admin_intents = new MBR_ISA_Admin_Intents( $this->intents() );
+        }
+        return $this->admin_intents;
+    }
+
+    public function admin_synonyms() {
+        if ( null === $this->admin_synonyms ) {
+            $this->admin_synonyms = new MBR_ISA_Admin_Synonyms( $this->synonyms(), $this->tokeniser() );
+        }
+        return $this->admin_synonyms;
+    }
+
+    public function admin_theme() {
+        if ( null === $this->admin_theme ) {
+            $this->admin_theme = new MBR_ISA_Admin_Theme();
+        }
+        return $this->admin_theme;
     }
 
     // --- Admin-post handlers -------------------------------------------------
@@ -308,6 +338,18 @@ class MBR_ISA {
         <div class="wrap">
             <h1><?php esc_html_e( 'MBR Intelligent Site Assistant — Diagnostic', 'mbr-isa' ); ?></h1>
             <p><?php esc_html_e( 'Development diagnostic view. Replaced by the real admin UI in a later session.', 'mbr-isa' ); ?></p>
+
+            <p style="margin:0 0 1em;">
+                <a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=' . MBR_ISA_Admin_Intents::PAGE_SLUG ) ); ?>">
+                    <?php esc_html_e( 'Manage intents →', 'mbr-isa' ); ?>
+                </a>
+                <a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=' . MBR_ISA_Admin_Synonyms::PAGE_SLUG ) ); ?>">
+                    <?php esc_html_e( 'Manage synonyms →', 'mbr-isa' ); ?>
+                </a>
+                <a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=' . MBR_ISA_Admin_Theme::PAGE_SLUG ) ); ?>">
+                    <?php esc_html_e( 'Appearance →', 'mbr-isa' ); ?>
+                </a>
+            </p>
 
             <h2><?php esc_html_e( 'Plugin Status', 'mbr-isa' ); ?></h2>
             <table class="widefat striped" style="max-width:700px;">

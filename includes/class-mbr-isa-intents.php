@@ -14,6 +14,7 @@
  *     'triggers'   => ['contact', 'email', 'get in touch', 'how do I reach'],
  *     'response'   => 'You can reach Bob at robert@madebyrobert.co.uk ...',
  *     'confidence' => 1.0,  // Higher wins ties.
+ *     'disabled'   => false, // Optional. If true, intent is skipped at match time.
  *   ]
  *
  * Triggers are matched as case-insensitive substrings against the raw query.
@@ -47,6 +48,11 @@ class MBR_ISA_Intents {
 
         foreach ( $intents as $intent ) {
             if ( ! $this->intent_is_valid( $intent ) ) {
+                continue;
+            }
+
+            // Skip intents the admin has disabled.
+            if ( ! empty( $intent['disabled'] ) ) {
                 continue;
             }
 

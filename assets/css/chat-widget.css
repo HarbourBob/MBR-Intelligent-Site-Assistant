@@ -630,3 +630,165 @@
 		animation: none !important;
 	}
 }
+
+/* ---------- Theme presets ------------------------------------------------- */
+/*
+ * Each preset overrides the colour custom properties defined at the root
+ * .mbr-isa-chat selector. The default class (no theme modifier) keeps the
+ * current Catppuccin Mocha palette, so existing installs render unchanged.
+ *
+ * RGB triplets (--*-rgb) are duplicates of the hex colours, used only by
+ * the glass modifier so it can compose rgba() calls with custom alpha.
+ */
+
+/* Default Mocha — RGB triplets for glass support. */
+.mbr-isa-chat,
+.mbr-isa-chat--theme-mocha {
+	--mbr-isa-base-rgb:     30, 30, 46;
+	--mbr-isa-mantle-rgb:   24, 24, 37;
+	--mbr-isa-surface0-rgb: 49, 50, 68;
+	--mbr-isa-mauve-rgb:    203, 166, 247;
+}
+
+/* Slate Light — clean neutral with indigo accent. */
+.mbr-isa-chat--theme-slate-light {
+	--mbr-isa-base:     #ffffff;
+	--mbr-isa-mantle:   #f8f9fa;
+	--mbr-isa-crust:    #e9ecef;
+	--mbr-isa-surface0: #dee2e6;
+	--mbr-isa-surface1: #ced4da;
+	--mbr-isa-surface2: #adb5bd;
+	--mbr-isa-overlay0: #6c757d;
+	--mbr-isa-text:     #212529;
+	--mbr-isa-subtext0: #495057;
+	--mbr-isa-subtext1: #343a40;
+	--mbr-isa-blue:     #0d6efd;
+	--mbr-isa-lavender: #6610f2;
+	--mbr-isa-mauve:    #6f42c1;
+	--mbr-isa-green:    #198754;
+	--mbr-isa-yellow:   #ffc107;
+	--mbr-isa-peach:    #fd7e14;
+	--mbr-isa-red:      #dc3545;
+	--mbr-isa-base-rgb:     255, 255, 255;
+	--mbr-isa-mantle-rgb:   248, 249, 250;
+	--mbr-isa-surface0-rgb: 222, 226, 230;
+	--mbr-isa-mauve-rgb:    111, 66, 193;
+}
+
+/* Ocean — soft light blues with teal accent. */
+.mbr-isa-chat--theme-ocean {
+	--mbr-isa-base:     #f0f7ff;
+	--mbr-isa-mantle:   #e1eef9;
+	--mbr-isa-crust:    #cfe2f3;
+	--mbr-isa-surface0: #b3d4ed;
+	--mbr-isa-surface1: #93bedf;
+	--mbr-isa-surface2: #6fa3cc;
+	--mbr-isa-overlay0: #4a7fa8;
+	--mbr-isa-text:     #0a3a5c;
+	--mbr-isa-subtext0: #1a5180;
+	--mbr-isa-subtext1: #14456f;
+	--mbr-isa-blue:     #0077b6;
+	--mbr-isa-lavender: #00b4d8;
+	--mbr-isa-mauve:    #0096c7;
+	--mbr-isa-green:    #00a896;
+	--mbr-isa-yellow:   #f4a261;
+	--mbr-isa-peach:    #e76f51;
+	--mbr-isa-red:      #d62828;
+	--mbr-isa-base-rgb:     240, 247, 255;
+	--mbr-isa-mantle-rgb:   225, 238, 249;
+	--mbr-isa-surface0-rgb: 179, 212, 237;
+	--mbr-isa-mauve-rgb:    0, 150, 199;
+}
+
+/* Sunset — warm peach and coral. */
+.mbr-isa-chat--theme-sunset {
+	--mbr-isa-base:     #fff8f3;
+	--mbr-isa-mantle:   #ffe8d6;
+	--mbr-isa-crust:    #fad9c1;
+	--mbr-isa-surface0: #f5c4a3;
+	--mbr-isa-surface1: #eaaa84;
+	--mbr-isa-surface2: #d98e64;
+	--mbr-isa-overlay0: #b86b48;
+	--mbr-isa-text:     #4a2818;
+	--mbr-isa-subtext0: #6b3a26;
+	--mbr-isa-subtext1: #5a3120;
+	--mbr-isa-blue:     #e07856;
+	--mbr-isa-lavender: #c45c44;
+	--mbr-isa-mauve:    #d65d3a;
+	--mbr-isa-green:    #8a9a5b;
+	--mbr-isa-yellow:   #f6bd60;
+	--mbr-isa-peach:    #f4845f;
+	--mbr-isa-red:      #c1121f;
+	--mbr-isa-base-rgb:     255, 248, 243;
+	--mbr-isa-mantle-rgb:   255, 232, 214;
+	--mbr-isa-surface0-rgb: 245, 196, 163;
+	--mbr-isa-mauve-rgb:    214, 93, 58;
+}
+
+/* Forest — deep green forest with sage accent. */
+.mbr-isa-chat--theme-forest {
+	--mbr-isa-base:     #1a2820;
+	--mbr-isa-mantle:   #223530;
+	--mbr-isa-crust:    #131e18;
+	--mbr-isa-surface0: #2d4639;
+	--mbr-isa-surface1: #3a5848;
+	--mbr-isa-surface2: #4a6c5a;
+	--mbr-isa-overlay0: #6d8c7b;
+	--mbr-isa-text:     #d4e8dc;
+	--mbr-isa-subtext0: #9ec0a8;
+	--mbr-isa-subtext1: #b4d4be;
+	--mbr-isa-blue:     #88c1a0;
+	--mbr-isa-lavender: #a8d8b9;
+	--mbr-isa-mauve:    #6ed079;
+	--mbr-isa-green:    #a8d8a8;
+	--mbr-isa-yellow:   #d4c977;
+	--mbr-isa-peach:    #d4a574;
+	--mbr-isa-red:      #d97b6c;
+	--mbr-isa-base-rgb:     26, 40, 32;
+	--mbr-isa-mantle-rgb:   34, 53, 48;
+	--mbr-isa-surface0-rgb: 45, 70, 57;
+	--mbr-isa-mauve-rgb:    110, 208, 121;
+}
+
+/* ---------- Glassmorphism modifier --------------------------------------- */
+/*
+ * Translucent panel + bubble with backdrop blur. Layers on top of any
+ * theme preset — alpha values drawn from the preset's RGB triplets.
+ *
+ * backdrop-filter has wide modern browser support but degrades gracefully:
+ * unsupported browsers render an opaque-ish panel via the rgba background.
+ */
+
+.mbr-isa-chat--glass .mbr-isa-chat__panel {
+	background: rgba(var(--mbr-isa-base-rgb), 0.72);
+	backdrop-filter: blur(20px) saturate(180%);
+	-webkit-backdrop-filter: blur(20px) saturate(180%);
+	border: 1px solid rgba(var(--mbr-isa-mauve-rgb), 0.18);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18),
+	            0 2px 8px rgba(0, 0, 0, 0.08),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.mbr-isa-chat--glass .mbr-isa-chat__header,
+.mbr-isa-chat--glass .mbr-isa-chat__footer {
+	background: rgba(var(--mbr-isa-mantle-rgb), 0.55);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+.mbr-isa-chat--glass .mbr-isa-chat__bubble {
+	background: rgba(var(--mbr-isa-mauve-rgb), 0.85);
+	backdrop-filter: blur(12px) saturate(160%);
+	-webkit-backdrop-filter: blur(12px) saturate(160%);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.mbr-isa-chat--glass .mbr-isa-chat__turn--bot .mbr-isa-chat__bubble-msg,
+.mbr-isa-chat--glass .mbr-isa-chat__turn--user .mbr-isa-chat__bubble-msg {
+	background: rgba(var(--mbr-isa-surface0-rgb), 0.6);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	border: 1px solid rgba(var(--mbr-isa-mauve-rgb), 0.10);
+}

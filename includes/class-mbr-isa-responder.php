@@ -72,13 +72,23 @@ class MBR_ISA_Responder {
      * @return array
      */
     public function format_intent_response( array $intent ) {
+        $response_html = (string) $intent['response'];
+
         return [
-            'type'        => 'intent',
-            'intent_id'   => $intent['id'],
-            'intent_label'=> $intent['label'],
-            'message'     => $intent['response'],
-            'results'     => [],
-            'suggestions' => [ __( 'Ask me something else about this site', 'mbr-isa' ) ],
+            'type'           => 'intent',
+            'intent_id'      => $intent['id'],
+            'intent_label'   => $intent['label'],
+            // Plain-text fallback (used by logging and any consumer that
+            // can't render HTML safely).
+            'message'        => wp_strip_all_tags( $response_html ),
+            // HTML-safe response. Already sanitised on save with wp_kses_post,
+            // and stripped of any tags wp_kses_post wouldn't have allowed in
+            // case the option was edited directly. The widget renders this
+            // via innerHTML when present.
+            'message_html'   => wp_kses_post( $response_html ),
+            'message_format' => 'html',
+            'results'        => [],
+            'suggestions'    => [ __( 'Ask me something else about this site', 'mbr-isa' ) ],
         ];
     }
 

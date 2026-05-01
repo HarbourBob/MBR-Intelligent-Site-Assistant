@@ -361,8 +361,12 @@
 		var badge = this._buildBadge( response );
 		if ( badge ) children.push( badge );
 
-		// Message.
-		if ( response.message ) {
+		// Message. Server may send message_html for intent responses
+		// (already sanitised with wp_kses_post() server-side); otherwise
+		// fall back to the plain-text message field.
+		if ( response.message_html ) {
+			children.push( el( 'div', { className: 'mbr-isa-chat__bubble-msg', html: response.message_html } ) );
+		} else if ( response.message ) {
 			children.push( el( 'div', { className: 'mbr-isa-chat__bubble-msg', text: response.message } ) );
 		}
 

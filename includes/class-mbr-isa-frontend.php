@@ -110,6 +110,8 @@ class MBR_ISA_Frontend {
 				'title'         => $settings['title'],
 				'greeting'      => $settings['greeting'],
 				'placeholder'   => $settings['placeholder'],
+				'theme_preset'  => $settings['theme_preset'],
+				'theme_glass'   => $settings['theme_glass'],
 				'extra_attrs'   => $inline_style,
 			]
 		);
@@ -145,12 +147,14 @@ class MBR_ISA_Frontend {
 
 		echo $this->render_markup(
 			[
-				'mode'        => 'floating',
-				'position'    => $config['position'],
-				'title'       => $config['title'],
-				'greeting'    => $config['greeting'],
-				'placeholder' => $config['placeholder'],
-				'extra_attrs' => '',
+				'mode'         => 'floating',
+				'position'     => $config['position'],
+				'title'        => $config['title'],
+				'greeting'     => $config['greeting'],
+				'placeholder'  => $config['placeholder'],
+				'theme_preset' => $config['theme_preset'],
+				'theme_glass'  => $config['theme_glass'],
+				'extra_attrs'  => '',
 			]
 		); // Markup is internally escaped.
 	}
@@ -236,17 +240,26 @@ class MBR_ISA_Frontend {
 		$settings = get_option( 'mbr_isa_settings', [] );
 
 		$defaults = [
-			'title'       => __( 'Site Assistant', 'mbr-isa' ),
-			'greeting'    => __( 'Hi! I can help you find things on this site. What are you looking for?', 'mbr-isa' ),
-			'placeholder' => __( 'Ask a question…', 'mbr-isa' ),
-			'position'    => 'bottom-right',
+			'title'        => __( 'Site Assistant', 'mbr-isa' ),
+			'greeting'     => __( 'Hi! I can help you find things on this site. What are you looking for?', 'mbr-isa' ),
+			'placeholder'  => __( 'Ask a question…', 'mbr-isa' ),
+			'position'     => 'bottom-right',
+			'theme_preset' => 'mocha',
+			'theme_glass'  => false,
 		];
 
+		$preset_raw = ! empty( $settings['theme_preset'] ) ? (string) $settings['theme_preset'] : $defaults['theme_preset'];
+		if ( ! in_array( $preset_raw, [ 'mocha', 'slate-light', 'ocean', 'sunset', 'forest' ], true ) ) {
+			$preset_raw = $defaults['theme_preset'];
+		}
+
 		$resolved = [
-			'title'       => ! empty( $settings['widget_title'] )       ? (string) $settings['widget_title']       : $defaults['title'],
-			'greeting'    => ! empty( $settings['widget_greeting'] )    ? (string) $settings['widget_greeting']    : $defaults['greeting'],
-			'placeholder' => ! empty( $settings['widget_placeholder'] ) ? (string) $settings['widget_placeholder'] : $defaults['placeholder'],
-			'position'    => ! empty( $settings['widget_position'] )    ? (string) $settings['widget_position']    : $defaults['position'],
+			'title'        => ! empty( $settings['widget_title'] )       ? (string) $settings['widget_title']       : $defaults['title'],
+			'greeting'     => ! empty( $settings['widget_greeting'] )    ? (string) $settings['widget_greeting']    : $defaults['greeting'],
+			'placeholder'  => ! empty( $settings['widget_placeholder'] ) ? (string) $settings['widget_placeholder'] : $defaults['placeholder'],
+			'position'     => ! empty( $settings['widget_position'] )    ? (string) $settings['widget_position']    : $defaults['position'],
+			'theme_preset' => $preset_raw,
+			'theme_glass'  => ! empty( $settings['theme_glass'] ),
 		];
 
 		// Validate position against known values.
@@ -306,19 +319,38 @@ class MBR_ISA_Frontend {
 	 * @return string
 	 */
 	private function render_markup( array $args ) {
-		$mode        = $args['mode'];
-		$position    = $args['position'];
-		$title       = (string) $args['title'];
-		$greeting    = (string) $args['greeting'];
-		$placeholder = (string) $args['placeholder'];
-		$extra_attrs = (string) $args['extra_attrs'];
+		$mode         = $args['mode'];
+		$position     = $args['position'];
+		$title        = (string) $args['title'];
+		$greeting     = (string) $args['greeting'];
+		$placeholder  = (string) $args['placeholder'];
+		$extra_attrs  = (string) $args['extra_attrs'];
+		$theme_preset = isset( $args['theme_preset'] ) ? (string) $args['theme_preset'] : 'mocha';
+		$theme_glass  = ! empty( $args['theme_glass'] );
+
+		// Whitelist preset slug — defensive in case a future caller forgets
+		// to validate. Falls back to mocha (the original Catppuccin default).
+		if ( ! in_array( $theme_preset, [ 'mocha', 'slate-light', 'ocean', 'sunset', 'forest' ], true ) ) {
+			$theme_preset = 'mocha';
+		}
 
 		$instance_id = 'mbr-isa-' . wp_generate_uuid4();
+
+		$container_classes = [
+			'mbr-isa-chat',
+			'mbr-isa-chat--' . $mode,
+			'mbr-isa-chat--' . $position,
+			'mbr-isa-chat--theme-' . $theme_preset,
+		];
+		if ( $theme_glass ) {
+			$container_classes[] = 'mbr-isa-chat--glass';
+		}
+		$class_attr = implode( ' ', array_map( 'sanitize_html_class', $container_classes ) );
 
 		ob_start();
 		?>
 		<div
-			class="mbr-isa-chat mbr-isa-chat--<?php echo esc_attr( $mode ); ?> mbr-isa-chat--<?php echo esc_attr( $position ); ?>"
+			class="<?php echo esc_attr( $class_attr ); ?>"
 			data-mbr-isa-mode="<?php echo esc_attr( $mode ); ?>"
 			data-mbr-isa-position="<?php echo esc_attr( $position ); ?>"
 			id="<?php echo esc_attr( $instance_id ); ?>"
