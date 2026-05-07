@@ -53,7 +53,8 @@ class MBR_ISA_Admin_Synonyms {
     }
 
     public function register_page() {
-        add_management_page(
+        add_submenu_page(
+            MBR_ISA::PARENT_SLUG,
             __( 'MBR ISA Synonyms', 'mbr-isa' ),
             __( 'MBR ISA Synonyms', 'mbr-isa' ),
             'manage_options',
@@ -589,7 +590,7 @@ class MBR_ISA_Admin_Synonyms {
     }
 
     private function redirect_back() {
-        wp_safe_redirect( admin_url( 'tools.php?page=' . self::PAGE_SLUG ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
         exit;
     }
 

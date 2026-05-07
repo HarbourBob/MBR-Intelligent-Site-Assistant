@@ -44,7 +44,8 @@ class MBR_ISA_Admin_Intents {
     }
 
     public function register_page() {
-        add_management_page(
+        add_submenu_page(
+            MBR_ISA::PARENT_SLUG,
             __( 'MBR ISA Intents', 'mbr-isa' ),
             __( 'MBR ISA Intents', 'mbr-isa' ),
             'manage_options',
@@ -634,7 +635,7 @@ class MBR_ISA_Admin_Intents {
     }
 
     private function redirect_back() {
-        wp_safe_redirect( admin_url( 'tools.php?page=' . self::PAGE_SLUG ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
         exit;
     }
 

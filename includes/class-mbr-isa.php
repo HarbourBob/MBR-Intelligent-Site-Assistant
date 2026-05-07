@@ -73,14 +73,44 @@ class MBR_ISA {
     private function register_hooks() {
         $this->indexer()->register_hooks();
         $this->frontend()->register_hooks();
+
+        // Parent menu must register before any submenus attach to it.
+        add_action( 'admin_menu', [ $this, 'register_parent_menu' ], 9 );
+
+        // Submenu order in the sidebar follows hook-registration order at the
+        // same priority, so register them in the order we want them displayed:
+        // Intents -> Synonyms -> Diagnostics -> Appearance.
         $this->admin_intents()->register_hooks();
         $this->admin_synonyms()->register_hooks();
+        add_action( 'admin_menu', [ $this, 'register_diagnostic_page' ] );
         $this->admin_theme()->register_hooks();
 
         add_action( 'rest_api_init', [ $this->rest(), 'register_routes' ] );
-        add_action( 'admin_menu',    [ $this, 'register_diagnostic_page' ] );
         add_action( 'admin_post_mbr_isa_full_reindex',         [ $this, 'handle_full_reindex' ] );
         add_action( 'admin_post_mbr_isa_save_widget_settings', [ $this, 'handle_save_widget_settings' ] );
+    }
+
+    // --- Top-level admin menu ------------------------------------------------
+
+    /**
+     * Parent slug for the "MBR Site Assistant" top-level admin menu.
+     *
+     * Deliberately set to the Intents page slug so that:
+     *   - clicking the parent menu lands on the Intents screen
+     *   - WordPress does not auto-generate a duplicate first submenu entry
+     */
+    const PARENT_SLUG = 'mbr-isa-intents';
+
+    public function register_parent_menu() {
+        add_menu_page(
+            __( 'MBR Site Assistant', 'mbr-isa' ),
+            __( 'MBR Site Assistant', 'mbr-isa' ),
+            'manage_options',
+            self::PARENT_SLUG,
+            '',
+            'dashicons-format-chat',
+            null
+        );
     }
 
     // --- Service accessors ---------------------------------------------------
@@ -198,7 +228,7 @@ class MBR_ISA {
 
         set_transient( 'mbr_isa_reindex_result', $stats, 60 );
 
-        wp_safe_redirect( admin_url( 'tools.php?page=mbr-isa-diagnostic&reindexed=1' ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=mbr-isa-diagnostic&reindexed=1' ) );
         exit;
     }
 
@@ -234,16 +264,17 @@ class MBR_ISA {
 
         update_option( 'mbr_isa_settings', $settings );
 
-        wp_safe_redirect( admin_url( 'tools.php?page=mbr-isa-diagnostic&widget-saved=1#mbr-isa-widget-settings' ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=mbr-isa-diagnostic&widget-saved=1#mbr-isa-widget-settings' ) );
         exit;
     }
 
     // --- Diagnostic page -----------------------------------------------------
 
     public function register_diagnostic_page() {
-        add_management_page(
-            __( 'MBR ISA Diagnostic', 'mbr-isa' ),
-            __( 'MBR ISA Diagnostic', 'mbr-isa' ),
+        add_submenu_page(
+            self::PARENT_SLUG,
+            __( 'MBR ISA Diagnostics', 'mbr-isa' ),
+            __( 'MBR ISA Diagnostics', 'mbr-isa' ),
             'manage_options',
             'mbr-isa-diagnostic',
             [ $this, 'render_diagnostic_page' ]
@@ -336,17 +367,17 @@ class MBR_ISA {
 
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e( 'MBR Intelligent Site Assistant — Diagnostic', 'mbr-isa' ); ?></h1>
+            <h1><?php esc_html_e( 'MBR Intelligent Site Assistant — Diagnostics', 'mbr-isa' ); ?></h1>
             <p><?php esc_html_e( 'Development diagnostic view. Replaced by the real admin UI in a later session.', 'mbr-isa' ); ?></p>
 
             <p style="margin:0 0 1em;">
-                <a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=' . MBR_ISA_Admin_Intents::PAGE_SLUG ) ); ?>">
+                <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=' . MBR_ISA_Admin_Intents::PAGE_SLUG ) ); ?>">
                     <?php esc_html_e( 'Manage intents →', 'mbr-isa' ); ?>
                 </a>
-                <a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=' . MBR_ISA_Admin_Synonyms::PAGE_SLUG ) ); ?>">
+                <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=' . MBR_ISA_Admin_Synonyms::PAGE_SLUG ) ); ?>">
                     <?php esc_html_e( 'Manage synonyms →', 'mbr-isa' ); ?>
                 </a>
-                <a class="button" href="<?php echo esc_url( admin_url( 'tools.php?page=' . MBR_ISA_Admin_Theme::PAGE_SLUG ) ); ?>">
+                <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=' . MBR_ISA_Admin_Theme::PAGE_SLUG ) ); ?>">
                     <?php esc_html_e( 'Appearance →', 'mbr-isa' ); ?>
                 </a>
             </p>

@@ -4,7 +4,7 @@ Tags: search, chatbot, ai, site assistant, intelligent search
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.6.1
+Stable tag: 0.6.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,9 +28,14 @@ Key features:
 
 1. Upload the plugin folder to `/wp-content/plugins/`.
 2. Activate through the 'Plugins' menu in WordPress.
-3. Go to Tools > MBR ISA Diagnostic to verify installation.
+3. Go to MBR Site Assistant → MBR ISA Diagnostics to verify installation.
 
 == Changelog ==
+
+= 0.6.2 =
+* Changed: Consolidated the four separate Tools menu entries (Intents, Synonyms, Diagnostic, Appearance) into a single top-level "MBR Site Assistant" admin menu with native submenus. The Tools menu is now tidier and the four screens are grouped together in the WordPress sidebar under their own icon.
+* Changed: "MBR ISA Diagnostic" renamed to "MBR ISA Diagnostics" for consistency with the other submenu labels.
+* Note: Any bookmarks pointing to `tools.php?page=mbr-isa-*` will need updating to `admin.php?page=mbr-isa-*`.
 
 = 0.6.1 =
 * Fix: Links inside chat message bubbles (intent responses with HTML) now have explicit theme-aware styling, using the active preset's --mbr-isa-blue accent. Previously they inherited the host theme's link colour, which caused unreadable white-on-light-background links on the Slate Light, Ocean, and Sunset presets.

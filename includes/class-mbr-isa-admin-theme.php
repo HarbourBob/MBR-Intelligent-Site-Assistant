@@ -2,7 +2,7 @@
 /**
  * Admin UI for chat-widget appearance.
  *
- * Adds a Tools → MBR ISA Appearance page where admins can pick a
+ * Adds a MBR Site Assistant → MBR ISA Appearance page where admins can pick a
  * colour preset and toggle the glassmorphism effect, with an
  * interactive live preview rendered using the actual widget CSS.
  *
@@ -22,6 +22,15 @@ class MBR_ISA_Admin_Theme {
     const OPTION_KEY   = 'mbr_isa_settings';
     const ACTION_SAVE  = 'mbr_isa_save_theme';
     const NOTICE_KEY   = 'mbr_isa_theme_notice';
+
+    /**
+     * Hook suffix returned by add_submenu_page(). Stored so the enqueue
+     * check can match exactly whatever WordPress generates, regardless of
+     * how the parent menu's title is sanitised into the prefix.
+     *
+     * @var string
+     */
+    private $page_hook = '';
 
     /**
      * Available presets. Order here drives the order of cards on the page.
@@ -70,7 +79,8 @@ class MBR_ISA_Admin_Theme {
     }
 
     public function register_page() {
-        add_management_page(
+        $this->page_hook = add_submenu_page(
+            MBR_ISA::PARENT_SLUG,
             __( 'MBR ISA Appearance', 'mbr-isa' ),
             __( 'MBR ISA Appearance', 'mbr-isa' ),
             'manage_options',
@@ -86,8 +96,9 @@ class MBR_ISA_Admin_Theme {
      * @param string $hook Current admin page hook suffix.
      */
     public function maybe_enqueue_widget_css( $hook ) {
-        // Hook for management pages is "tools_page_{slug}".
-        if ( 'tools_page_' . self::PAGE_SLUG !== $hook ) {
+        // Compare against the hook captured from add_submenu_page() so we
+        // remain correct regardless of the parent menu title's sanitised form.
+        if ( empty( $this->page_hook ) || $this->page_hook !== $hook ) {
             return;
         }
         wp_enqueue_style(
@@ -442,7 +453,7 @@ class MBR_ISA_Admin_Theme {
             'success',
             __( 'Appearance settings saved. <strong>If your changes don\'t appear on the front end immediately</strong>, clear any caching plugins (WP Rocket, SiteGround Optimizer, LiteSpeed, W3 Total Cache, etc.) and any CDN cache, then hard-refresh the front end (Ctrl+Shift+R or Cmd+Shift+R).', 'mbr-isa' )
         );
-        wp_safe_redirect( admin_url( 'tools.php?page=' . self::PAGE_SLUG ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
         exit;
     }
 
