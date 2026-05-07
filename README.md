@@ -6,7 +6,7 @@
 
 **No external APIs · No monthly fees · No visitor data leaves your server**
 
-[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://littlewebshack.com)
+[![Version](https://img.shields.io/badge/version-0.6.2-blue.svg)](https://littlewebshack.com)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b.svg)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4.svg)](https://www.php.net)
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-green.svg)](LICENSE)
