@@ -34,7 +34,65 @@ class MBR_ISA_Activator {
      * @return void
      */
     public static function run_schema_upgrade( $from_version ) {
+        global $wpdb;
+
+        $documents_table = $wpdb->prefix . 'mbrisa_documents';
+
+        // v1 -> v2: the documents table gains chunk_index and its unique key
+        // changes from (post_id) to (post_id, chunk_index). dbDelta adds new
+        // columns and keys but never drops an existing unique key, so remove
+        // the old one explicitly before letting dbDelta apply the new schema.
+        if ( version_compare( $from_version, '2', '<' ) ) {
+            $has_old_key = $wpdb->get_var(
+                $wpdb->prepare(
+                    'SELECT COUNT(*) FROM information_schema.statistics
+                     WHERE table_schema = DATABASE() AND table_name = %s AND index_name = %s',
+                    $documents_table,
+                    'post_id'
+                )
+            );
+            if ( $has_old_key ) {
+                $wpdb->query( "ALTER TABLE {$documents_table} DROP INDEX post_id" );
+            }
+        }
+
         self::create_tables();
+
+        // v2 -> v3: the documents table gains is_contents. dbDelta normally
+        // adds it as part of create_tables() above, but it silently does
+        // nothing when it cannot parse a definition, and a missing column
+        // makes every document insert fail — which looks like "indexing runs
+        // but returns nothing". Verify and add it directly if needed.
+        self::ensure_column(
+            $documents_table,
+            'is_contents',
+            "ALTER TABLE {$documents_table} ADD COLUMN is_contents TINYINT(1) NOT NULL DEFAULT 0 AFTER content_hash"
+        );
+    }
+
+    /**
+     * Add a column if it is missing. Belt-and-braces for dbDelta.
+     *
+     * @param string $table  Full table name.
+     * @param string $column Column name to check.
+     * @param string $sql    ALTER statement to run when absent.
+     * @return void
+     */
+    private static function ensure_column( $table, $column, $sql ) {
+        global $wpdb;
+
+        $exists = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = %s AND column_name = %s',
+                $table,
+                $column
+            )
+        );
+
+        if ( ! $exists ) {
+            $wpdb->query( $sql );
+        }
     }
 
     /**
@@ -66,19 +124,22 @@ class MBR_ISA_Activator {
             UNIQUE KEY term (term)
         ) {$charset_collate};";
 
-        // Documents (indexed posts/pages).
+        // Documents (indexed posts/pages). From schema v2 a post may occupy
+        // several rows — one per passage chunk — distinguished by chunk_index.
         $documents_sql = "CREATE TABLE {$documents_table} (
             doc_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             post_id BIGINT UNSIGNED NOT NULL,
+            chunk_index SMALLINT UNSIGNED NOT NULL DEFAULT 0,
             post_type VARCHAR(20) NOT NULL,
             title VARCHAR(500) NOT NULL,
-            excerpt VARCHAR(500) DEFAULT NULL,
+            excerpt VARCHAR(2000) DEFAULT NULL,
             url VARCHAR(500) NOT NULL,
             token_count INT UNSIGNED NOT NULL DEFAULT 0,
             content_hash CHAR(32) NOT NULL,
+            is_contents TINYINT(1) NOT NULL DEFAULT 0,
             indexed_at DATETIME NOT NULL,
             PRIMARY KEY  (doc_id),
-            UNIQUE KEY post_id (post_id),
+            UNIQUE KEY post_chunk (post_id,chunk_index),
             KEY post_type (post_type)
         ) {$charset_collate};";
 
@@ -133,6 +194,8 @@ class MBR_ISA_Activator {
             'widget_enabled'     => false, // Off until indexing + querying is in place.
             'log_queries'        => true,
             'rate_limit_per_min' => 30,
+            'index_pdfs'         => false, // Off by default; opt-in on the diagnostics page.
+            'pdf_max_filesize_mb' => 20,   // Skip PDFs larger than this to protect memory.
         ];
 
         if ( false === get_option( 'mbr_isa_settings' ) ) {

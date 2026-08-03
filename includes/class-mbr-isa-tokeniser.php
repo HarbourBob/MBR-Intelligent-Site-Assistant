@@ -78,25 +78,56 @@ class MBR_ISA_Tokeniser {
     }
 
     /**
-     * Clean raw text: strip HTML, shortcodes, URLs, normalise whitespace.
+     * Remove markup but keep human-readable punctuation.
      *
-     * @param string $text Input.
-     * @return string Cleaned text.
+     * Shared by clean() and by the indexer, which must convert content to
+     * plain text *before* it is split into passage chunks. Chunking raw
+     * HTML is unsafe: a chunk boundary can fall inside a tag, leaving the
+     * next chunk starting mid-attribute with no opening angle bracket for
+     * strip_tags() to recognise — at which point SVG icon attributes and
+     * similar markup leak into both the snippet and the index.
+     *
+     * @param string $text Raw content, possibly containing HTML.
+     * @return string Plain text with punctuation intact.
      */
-    public function clean( $text ) {
+    public function strip_markup( $text ) {
+        $text = (string) $text;
+
         // Remove shortcodes first — before strip_tags so their contents don't leak.
         if ( function_exists( 'strip_shortcodes' ) ) {
             $text = strip_shortcodes( $text );
         }
 
         // Remove script/style tags and their contents entirely.
-        $text = preg_replace( '#<(script|style)[^>]*>.*?</\1>#is', ' ', $text );
+        $text = preg_replace( '#<(script|style)[^>]*>.*?</\1>#is', ' ', (string) $text );
+
+        // Drop HTML comments, which can carry block-editor JSON.
+        $text = preg_replace( '/<!--.*?-->/s', ' ', (string) $text );
 
         // Strip remaining HTML.
-        $text = wp_strip_all_tags( $text );
+        $text = wp_strip_all_tags( (string) $text );
+
+        // An unterminated tag would otherwise survive as attribute text.
+        // Nothing legitimate in prose looks like an unclosed tag.
+        $text = preg_replace( '/<[^>]*$/s', ' ', (string) $text );
 
         // Decode HTML entities so &amp; becomes &, etc.
-        $text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+        $text = html_entity_decode( (string) $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+        // Collapse whitespace.
+        $text = preg_replace( '/\s+/u', ' ', (string) $text );
+
+        return trim( (string) $text );
+    }
+
+    /**
+     * Clean raw text: strip HTML, shortcodes, URLs, normalise whitespace.
+     *
+     * @param string $text Input.
+     * @return string Cleaned text.
+     */
+    public function clean( $text ) {
+        $text = $this->strip_markup( $text );
 
         // Remove URLs.
         $text = preg_replace( '#https?://\S+#i', ' ', $text );

@@ -186,16 +186,9 @@ class MBR_ISA_Responder {
      * @return string HTML-safe string with <mark> wrapping matches.
      */
     private function build_snippet( $excerpt, array $query_tokens ) {
-        $excerpt = (string) $excerpt;
-        if ( '' === trim( $excerpt ) ) {
+        $excerpt = trim( (string) preg_replace( '/\s+/u', ' ', (string) $excerpt ) );
+        if ( '' === $excerpt ) {
             return '';
-        }
-
-        // Escape first so <mark> is the only HTML we introduce.
-        $escaped = esc_html( $excerpt );
-
-        if ( empty( $query_tokens ) ) {
-            return $escaped;
         }
 
         // Highlight by matching token prefixes on word boundaries.
@@ -209,6 +202,53 @@ class MBR_ISA_Responder {
             }
             $patterns[] = preg_quote( $stem, '/' );
         }
+
+        // Since 0.8.0 the stored excerpt is the full matching passage chunk
+        // (up to 2,000 chars), so the first hit can sit anywhere in it. Cut
+        // a window centred on the first hit, snapped to word boundaries,
+        // before escaping and highlighting.
+        $window = 240;
+
+        if ( ! empty( $patterns ) ) {
+            $regex = '/\b(' . implode( '|', $patterns ) . ')[\p{L}\p{N}]*/iu';
+
+            if ( preg_match( $regex, $excerpt, $m, PREG_OFFSET_CAPTURE ) ) {
+                $char_pos = mb_strlen( substr( $excerpt, 0, (int) $m[0][1] ) );
+                $start    = max( 0, $char_pos - (int) floor( $window / 2 ) );
+
+                // Snap the left edge forward to the next space so the
+                // snippet never opens mid-word.
+                if ( $start > 0 ) {
+                    $space = mb_strpos( $excerpt, ' ', $start );
+                    if ( false !== $space && $space < $char_pos ) {
+                        $start = $space + 1;
+                    }
+                }
+
+                $slice = mb_substr( $excerpt, $start, $window );
+
+                // Trim a trailing part-word, then add ellipses where cut.
+                if ( $start + $window < mb_strlen( $excerpt ) ) {
+                    $last_space = mb_strrpos( $slice, ' ' );
+                    if ( false !== $last_space && $last_space > (int) floor( $window / 2 ) ) {
+                        $slice = mb_substr( $slice, 0, $last_space );
+                    }
+                    $slice .= '…';
+                }
+                if ( $start > 0 ) {
+                    $slice = '…' . $slice;
+                }
+
+                $excerpt = $slice;
+            } else {
+                $excerpt = mb_substr( $excerpt, 0, $window );
+            }
+        } else {
+            $excerpt = mb_substr( $excerpt, 0, $window );
+        }
+
+        // Escape first so <mark> is the only HTML we introduce.
+        $escaped = esc_html( $excerpt );
 
         if ( empty( $patterns ) ) {
             return $escaped;
