@@ -99,7 +99,7 @@ That's the minimum. From there:
 - Click **Manage synonyms →** to fix any vocabulary mismatches between your content and how visitors describe it.
 - Click **Appearance →** to pick a theme and (optionally) enable the glass effect.
 
-The full [user guide](docs/mbr-intelligent-site-assistant-user-guide-v0.8.1.pdf) covers every section in detail.
+The full [user guide](docs/mbr-intelligent-site-assistant-user-guide.pdf) covers every section in detail.
 
 ## Command line
 
