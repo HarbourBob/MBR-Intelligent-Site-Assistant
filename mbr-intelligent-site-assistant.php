@@ -44,7 +44,7 @@ define( 'MBR_ISA_FILE',        __FILE__ );
 define( 'MBR_ISA_DIR',         plugin_dir_path( __FILE__ ) );
 define( 'MBR_ISA_URL',         plugin_dir_url( __FILE__ ) );
 define( 'MBR_ISA_BASENAME',    plugin_basename( __FILE__ ) );
-define( 'MBR_ISA_DB_VERSION',  '3' );
+define( 'MBR_ISA_DB_VERSION',  '4' );
 define( 'MBR_ISA_MIN_PHP',     '7.4' );
 
 // PHP version guard — belt and braces alongside the header.

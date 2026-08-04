@@ -68,6 +68,13 @@ class MBR_ISA_Activator {
             'is_contents',
             "ALTER TABLE {$documents_table} ADD COLUMN is_contents TINYINT(1) NOT NULL DEFAULT 0 AFTER content_hash"
         );
+
+        // v3 -> v4: page_number, so a PDF result can open at the right page.
+        self::ensure_column(
+            $documents_table,
+            'page_number',
+            "ALTER TABLE {$documents_table} ADD COLUMN page_number SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER is_contents"
+        );
     }
 
     /**
@@ -137,6 +144,7 @@ class MBR_ISA_Activator {
             token_count INT UNSIGNED NOT NULL DEFAULT 0,
             content_hash CHAR(32) NOT NULL,
             is_contents TINYINT(1) NOT NULL DEFAULT 0,
+            page_number SMALLINT UNSIGNED NOT NULL DEFAULT 0,
             indexed_at DATETIME NOT NULL,
             PRIMARY KEY  (doc_id),
             UNIQUE KEY post_chunk (post_id,chunk_index),
