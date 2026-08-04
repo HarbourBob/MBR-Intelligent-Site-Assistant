@@ -18,6 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Converts text into a list of stemmed tokens ready for indexing or searching. See the file docblock above for details.
+ */
 class MBR_ISA_Tokeniser {
 
     /**

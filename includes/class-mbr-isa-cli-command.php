@@ -38,6 +38,8 @@ class MBR_ISA_CLI_Command {
      *
      *     wp mbr-isa reindex
      *
+     * @param array $args       Positional command arguments (unused).
+     * @param array $assoc_args Associative command arguments (unused).
      * @when after_wp_load
      */
     public function reindex( $args, $assoc_args ) {
@@ -62,7 +64,7 @@ class MBR_ISA_CLI_Command {
         if ( $failed > 0 ) {
             WP_CLI::error( sprintf(
                 '%s%d of %d items could not be written to the index. The database schema is '
-                . 'probably out of date \u2014 check `wp mbr-isa status`, then deactivate and '
+                . 'probably out of date — check `wp mbr-isa status`, then deactivate and '
                 . 'reactivate the plugin to re-run the schema upgrade.',
                 $line . ' ',
                 $failed,

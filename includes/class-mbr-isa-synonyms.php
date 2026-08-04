@@ -17,9 +17,14 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Expands query tokens with equivalent terms before searching. See the file docblock above for details.
+ */
 class MBR_ISA_Synonyms {
 
     /**
+     * Tokeniser used to stem synonym group terms for matching.
+     *
      * @var MBR_ISA_Tokeniser
      */
     private $tokeniser;

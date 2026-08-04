@@ -21,6 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Passage chunker. See the file docblock above for details.
+ */
 class MBR_ISA_Chunker {
 
     /**
@@ -40,6 +43,8 @@ class MBR_ISA_Chunker {
     private $overlap_words;
 
     /**
+     * Set the chunk size and overlap used when splitting content.
+     *
      * @param int $size_words    Words per chunk. Default 250 (~1,500 chars).
      * @param int $overlap_words Words shared between consecutive chunks. Default 50.
      */

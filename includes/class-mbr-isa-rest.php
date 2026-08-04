@@ -16,16 +16,23 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Public REST API endpoints for the chat widget. See the file docblock above for details.
+ */
 class MBR_ISA_REST {
 
     const NAMESPACE_V1 = 'mbr-isa/v1';
 
     /**
+     * Handles query execution and response formatting for /ask.
+     *
      * @var MBR_ISA_Query_Handler
      */
     private $query_handler;
 
     /**
+     * Per-IP-hash throttling shared by /ask and /feedback.
+     *
      * @var MBR_ISA_Rate_Limiter
      */
     private $rate_limiter;
@@ -142,32 +149,34 @@ class MBR_ISA_REST {
         $feedback = (int) $request->get_param( 'feedback' );
 
         if ( $query_id <= 0 ) {
-            return new WP_Error( 'mbr_isa_invalid_query_id', 'Invalid query_id', [ 'status' => 400 ] );
+            return new WP_Error( 'mbr_isa_invalid_query_id', __( 'Invalid query_id', 'mbr-isa' ), [ 'status' => 400 ] );
         }
         if ( ! in_array( $feedback, [ -1, 0, 1 ], true ) ) {
-            return new WP_Error( 'mbr_isa_invalid_feedback', 'feedback must be -1, 0, or 1', [ 'status' => 400 ] );
+            return new WP_Error( 'mbr_isa_invalid_feedback', __( 'feedback must be -1, 0, or 1', 'mbr-isa' ), [ 'status' => 400 ] );
         }
 
         // 3. Existence check + time window. Only accept feedback on queries
         //    created within the last hour; anything older is either stale
         //    or a scripted scraper trying to bulk-set feedback.
         $table = $wpdb->prefix . 'mbrisa_queries';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- {$table} is derived from $wpdb->prefix, not user input; $query_id is the only variable input and is placeholder-bound below.
         $row   = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT id, created_at FROM {$table} WHERE id = %d LIMIT 1",
                 $query_id
             )
         );
+        // phpcs:enable
 
         if ( ! $row ) {
-            return new WP_Error( 'mbr_isa_not_found', 'Query not found', [ 'status' => 404 ] );
+            return new WP_Error( 'mbr_isa_not_found', __( 'Query not found', 'mbr-isa' ), [ 'status' => 404 ] );
         }
 
         $created_at = strtotime( (string) $row->created_at );
         if ( $created_at && ( time() - $created_at ) > HOUR_IN_SECONDS ) {
             return new WP_Error(
                 'mbr_isa_feedback_expired',
-                'Feedback window has closed for this query',
+                __( 'Feedback window has closed for this query', 'mbr-isa' ),
                 [ 'status' => 410 ]
             );
         }
@@ -182,7 +191,7 @@ class MBR_ISA_REST {
         );
 
         if ( false === $updated ) {
-            return new WP_Error( 'mbr_isa_db_error', 'Could not record feedback', [ 'status' => 500 ] );
+            return new WP_Error( 'mbr_isa_db_error', __( 'Could not record feedback', 'mbr-isa' ), [ 'status' => 500 ] );
         }
 
         return new WP_REST_Response( [ 'ok' => true ], 200 );

@@ -18,31 +18,44 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * End-to-end orchestration of a user query. See the file docblock above for details.
+ */
 class MBR_ISA_Query_Handler {
 
     const MAX_QUERY_LENGTH = 500;
 
     /**
+     * Tokeniser used to normalise the raw query into stemmed tokens.
+     *
      * @var MBR_ISA_Tokeniser
      */
     private $tokeniser;
 
     /**
+     * Indexer used to run the BM25 search against the inverted index.
+     *
      * @var MBR_ISA_Indexer
      */
     private $indexer;
 
     /**
+     * Synonym expander applied to tokens before search.
+     *
      * @var MBR_ISA_Synonyms
      */
     private $synonyms;
 
     /**
+     * Intent matcher checked before falling back to search.
+     *
      * @var MBR_ISA_Intents
      */
     private $intents;
 
     /**
+     * Formats search/intent results into the response payload.
+     *
      * @var MBR_ISA_Responder
      */
     private $responder;
@@ -247,7 +260,7 @@ class MBR_ISA_Query_Handler {
             }
         }
 
-        $ip       = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+        $ip       = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
         $ip_hash  = '' !== $ip ? hash( 'sha256', $ip . wp_salt() ) : null;
 
         $session_id_clean = is_string( $session_id ) ? substr( $session_id, 0, 32 ) : null;

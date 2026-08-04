@@ -3,7 +3,7 @@
  * Plugin Name:       MBR Intelligent Site Assistant
  * Plugin URI:        https://littlewebshack.com
  * Description:       A self-hosted conversational site search for WordPress. No external APIs, no monthly fees, no data leaves your server.
- * Version:           0.8.1
+ * Version:           0.8.2
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Robert Palmer
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Buy Me a Coffee
 add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
-    if ( ! function_exists( 'plugin_basename' ) || $file !== plugin_basename( __FILE__ ) ) {
+    if ( ! function_exists( 'plugin_basename' ) || plugin_basename( __FILE__ ) !== $file ) {
         return $links;
     }
 
@@ -39,7 +39,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Plugin constants.
-define( 'MBR_ISA_VERSION',     '0.8.1' );
+define( 'MBR_ISA_VERSION',     '0.8.2' );
 define( 'MBR_ISA_FILE',        __FILE__ );
 define( 'MBR_ISA_DIR',         plugin_dir_path( __FILE__ ) );
 define( 'MBR_ISA_URL',         plugin_dir_url( __FILE__ ) );
@@ -72,13 +72,22 @@ require_once MBR_ISA_DIR . 'includes/class-mbr-isa.php';
 // Manifest JSON is served from GitHub (HarbourBob/mbr-updates); the package it
 // points to is hosted on littlewebshack.com. This is the generic JSON-metadata
 // mode of Plugin Update Checker, not the GitHub VCS/releases integration.
-require_once MBR_ISA_DIR . 'plugin-update-checker/plugin-update-checker.php';
+//
+// The library is an optional, vendored third-party dependency rather than a
+// hard requirement — guard its inclusion so a package built or checked out
+// without it (e.g. straight from source control) still activates normally.
+// Self-update registration simply does not run in that case.
+$mbr_isa_puc_bootstrap = MBR_ISA_DIR . 'plugin-update-checker/plugin-update-checker.php';
+if ( file_exists( $mbr_isa_puc_bootstrap ) ) {
+    require_once $mbr_isa_puc_bootstrap;
 
-$mbr_isa_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-    'https://raw.githubusercontent.com/HarbourBob/mbr-updates/main/mbr-intelligent-site-assistant.json',
-    MBR_ISA_FILE,
-    'mbr-intelligent-site-assistant'
-);
+    $mbr_isa_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://raw.githubusercontent.com/HarbourBob/mbr-updates/main/mbr-intelligent-site-assistant.json',
+        MBR_ISA_FILE,
+        'mbr-intelligent-site-assistant'
+    );
+}
+unset( $mbr_isa_puc_bootstrap );
 
 // Activation and deactivation hooks.
 register_activation_hook( __FILE__,   [ 'MBR_ISA_Activator',   'activate'   ] );

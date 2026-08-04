@@ -16,26 +16,26 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 global $wpdb;
 
 // Respect the "keep data on uninstall" option if the user has set it.
-$keep_data = get_option( 'mbr_isa_keep_data_on_uninstall', false );
+$mbr_isa_keep_data = get_option( 'mbr_isa_keep_data_on_uninstall', false );
 
-if ( $keep_data ) {
+if ( $mbr_isa_keep_data ) {
     return;
 }
 
 // Drop custom tables.
-$tables = [
+$mbr_isa_tables = [
     $wpdb->prefix . 'mbrisa_terms',
     $wpdb->prefix . 'mbrisa_documents',
     $wpdb->prefix . 'mbrisa_postings',
     $wpdb->prefix . 'mbrisa_queries',
 ];
 
-foreach ( $tables as $table ) {
-    $wpdb->query( "DROP TABLE IF EXISTS `{$table}`" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+foreach ( $mbr_isa_tables as $mbr_isa_table ) {
+    $wpdb->query( "DROP TABLE IF EXISTS `{$mbr_isa_table}`" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $mbr_isa_table is derived from $wpdb->prefix, not user input.
 }
 
 // Delete all plugin options.
-$options = [
+$mbr_isa_options = [
     'mbr_isa_version',
     'mbr_isa_db_version',
     'mbr_isa_settings',
@@ -45,8 +45,8 @@ $options = [
     'mbr_isa_keep_data_on_uninstall',
 ];
 
-foreach ( $options as $option ) {
-    delete_option( $option );
+foreach ( $mbr_isa_options as $mbr_isa_option ) {
+    delete_option( $mbr_isa_option );
 }
 
 // Clear scheduled cron events.

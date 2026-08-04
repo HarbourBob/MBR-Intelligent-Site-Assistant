@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<ruleset name="MBR Intelligent Site Assistant">
+	<description>WPCS baseline for MBR Intelligent Site Assistant.</description>
+
+	<file>.</file>
+	<exclude-pattern>*/plugin-update-checker/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+
+	<arg value="sp"/>
+	<arg name="extensions" value="php"/>
+
+	<rule ref="WordPress-Extra">
+		<!--
+			This codebase uses 4-space indentation and short array syntax
+			throughout rather than WPCS's tabs/long-array-syntax defaults.
+			These are excluded so `phpcs` reflects the project's actual,
+			deliberate style instead of flagging ~6,700 pre-existing lines
+			that were out of scope for the security/compliance pass that
+			introduced this ruleset. Re-evaluate if the project ever adopts
+			a full reformat.
+		-->
+		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+	</rule>
+	<rule ref="WordPress-Docs"/>
+
+	<config name="minimum_supported_wp_version" value="5.8"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="mbr-isa"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="mbr_isa"/>
+				<element value="MBR_ISA"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

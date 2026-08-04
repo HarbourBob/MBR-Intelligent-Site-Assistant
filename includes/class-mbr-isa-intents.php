@@ -28,6 +28,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Matches known question patterns to pre-written answers. See the file docblock above for details.
+ */
 class MBR_ISA_Intents {
 
     /**

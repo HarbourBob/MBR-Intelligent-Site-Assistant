@@ -21,6 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Turns search results into a conversational response payload. See the file docblock above for details.
+ */
 class MBR_ISA_Responder {
 
     const CONFIDENCE_HIGH   = 'high';

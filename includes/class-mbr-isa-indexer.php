@@ -15,19 +15,28 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Populates the inverted index and runs searches against it. See the file docblock above for details.
+ */
 class MBR_ISA_Indexer {
 
     /**
+     * Tokeniser used to normalise indexed content into stemmed tokens.
+     *
      * @var MBR_ISA_Tokeniser
      */
     private $tokeniser;
 
     /**
+     * BM25 scorer used to rank documents for a query.
+     *
      * @var MBR_ISA_BM25
      */
     private $bm25;
 
     /**
+     * Extracts a text layer from indexed PDF attachments.
+     *
      * @var MBR_ISA_PDF_Extractor
      */
     private $pdf_extractor;
@@ -40,6 +49,8 @@ class MBR_ISA_Indexer {
     private $settings;
 
     /**
+     * Splits long content into overlapping passage chunks for indexing.
+     *
      * @var MBR_ISA_Chunker
      */
     private $chunker;
@@ -166,12 +177,14 @@ class MBR_ISA_Indexer {
         $doc_url      = mb_substr( $this->document_url( $post ), 0, 500 );
 
         $documents_table = $wpdb->prefix . 'mbrisa_documents';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- {$documents_table} is derived from $wpdb->prefix, not user input; post_id is placeholder-bound below.
         $existing_hash   = $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT content_hash FROM {$documents_table} WHERE post_id = %d AND chunk_index = 0",
                 $post->ID
             )
         );
+        // phpcs:enable
 
         if ( null !== $existing_hash && $existing_hash === $content_hash ) {
             return;
@@ -236,21 +249,27 @@ class MBR_ISA_Indexer {
         global $wpdb;
 
         $documents_table = $wpdb->prefix . 'mbrisa_documents';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- {$documents_table} is derived from $wpdb->prefix, not user input; post_id is placeholder-bound below.
         $doc_ids = array_map(
             'intval',
             $wpdb->get_col(
                 $wpdb->prepare( "SELECT doc_id FROM {$documents_table} WHERE post_id = %d", $post_id )
             )
         );
+        // phpcs:enable
 
         if ( empty( $doc_ids ) ) {
             return;
         }
 
+        // $placeholder is a run of literal '%d' tokens (one per element of $doc_ids, itself
+        // int-cast above via array_map( 'intval', ... )); the values are then bound through
+        // $wpdb->prepare()'s spread args below, so this is a genuinely parameterised IN() clause.
         $placeholder = implode( ',', array_fill( 0, count( $doc_ids ), '%d' ) );
 
         $affected_term_ids = $wpdb->get_col(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $placeholder comment above; table name is from $wpdb->prefix.
                 "SELECT DISTINCT term_id FROM {$wpdb->prefix}mbrisa_postings WHERE doc_id IN ($placeholder)",
                 ...$doc_ids
             )
@@ -258,16 +277,19 @@ class MBR_ISA_Indexer {
 
         $wpdb->query(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $placeholder comment above; table name is from $wpdb->prefix.
                 "DELETE FROM {$wpdb->prefix}mbrisa_postings WHERE doc_id IN ($placeholder)",
                 ...$doc_ids
             )
         );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter -- see $placeholder comment above; table name is from $wpdb->prefix.
         $wpdb->query(
             $wpdb->prepare(
                 "DELETE FROM {$documents_table} WHERE doc_id IN ($placeholder)",
                 ...$doc_ids
             )
         );
+        // phpcs:enable
 
         $this->recalculate_document_frequencies_for_terms( $affected_term_ids );
         $this->prune_orphaned_terms();
@@ -492,9 +514,13 @@ class MBR_ISA_Indexer {
             ];
         }
 
+        // $doc_ids_placeholder is a run of literal '%d' tokens, one per element of
+        // $candidate_ids (internal doc IDs from the scoring map, not user input); the
+        // values are bound through $wpdb->prepare()'s spread args below.
         $doc_ids_placeholder = implode( ',', array_fill( 0, count( $candidate_ids ), '%d' ) );
         $doc_rows = $wpdb->get_results(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $doc_ids_placeholder comment above; table name is from $wpdb->prefix.
                 "SELECT doc_id, post_id, chunk_index, post_type, title, excerpt, url FROM {$wpdb->prefix}mbrisa_documents WHERE doc_id IN ($doc_ids_placeholder)",
                 ...$candidate_ids
             ),
@@ -582,9 +608,12 @@ class MBR_ISA_Indexer {
             return;
         }
 
+        // $values_sql is a run of literal '(%d, %d, %d, %s)' tuples, one per row to insert;
+        // the actual values are bound through $wpdb->prepare()'s $values_args below.
         $sql = "INSERT INTO {$wpdb->prefix}mbrisa_postings (term_id, doc_id, term_frequency, field) VALUES "
              . implode( ', ', $values_sql );
 
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- see $sql comment above; table name is from $wpdb->prefix and all values are placeholder-bound.
         $wpdb->query( $wpdb->prepare( $sql, $values_args ) );
     }
 
@@ -597,9 +626,11 @@ class MBR_ISA_Indexer {
 
         $terms = array_values( array_unique( $terms ) );
 
+        // See remove_post() above for why this dynamic placeholder list is safe.
         $placeholder = implode( ',', array_fill( 0, count( $terms ), '%s' ) );
         $existing = $wpdb->get_results(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $placeholder comment above; table name is from $wpdb->prefix.
                 "SELECT term_id, term FROM {$wpdb->prefix}mbrisa_terms WHERE term IN ($placeholder)",
                 ...$terms
             )
@@ -633,9 +664,11 @@ class MBR_ISA_Indexer {
             return [];
         }
 
+        // See remove_post() above for why this dynamic placeholder list is safe.
         $placeholder = implode( ',', array_fill( 0, count( $terms ), '%s' ) );
         $rows = $wpdb->get_results(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $placeholder comment above; table name is from $wpdb->prefix.
                 "SELECT term_id, term, document_frequency FROM {$wpdb->prefix}mbrisa_terms WHERE term IN ($placeholder)",
                 ...$terms
             )
@@ -657,13 +690,13 @@ class MBR_ISA_Indexer {
         }
 
         $term_ids = array_map( function( $r ) { return (int) $r->term_id; }, $term_rows );
+        // See remove_post() above for why this dynamic placeholder list is safe.
         $placeholder = implode( ',', array_fill( 0, count( $term_ids ), '%d' ) );
 
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT term_id, doc_id, term_frequency
-                 FROM {$wpdb->prefix}mbrisa_postings
-                 WHERE field = %s AND term_id IN ($placeholder)",
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $placeholder comment above; table name is from $wpdb->prefix.
+                "SELECT term_id, doc_id, term_frequency FROM {$wpdb->prefix}mbrisa_postings WHERE field = %s AND term_id IN ($placeholder)",
                 array_merge( [ $field ], $term_ids )
             )
         );
@@ -714,14 +747,13 @@ class MBR_ISA_Indexer {
             return;
         }
 
+        // See remove_post() above for why this dynamic placeholder list is safe.
         $placeholder = implode( ',', array_fill( 0, count( $term_ids ), '%d' ) );
 
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT term_id, COUNT(DISTINCT doc_id) AS df
-                 FROM {$wpdb->prefix}mbrisa_postings
-                 WHERE term_id IN ($placeholder)
-                 GROUP BY term_id",
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $placeholder comment above; table name is from $wpdb->prefix.
+                "SELECT term_id, COUNT(DISTINCT doc_id) AS df FROM {$wpdb->prefix}mbrisa_postings WHERE term_id IN ($placeholder) GROUP BY term_id",
                 ...$term_ids
             )
         );

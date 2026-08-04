@@ -6,7 +6,7 @@
 
 **No external APIs · No monthly fees · No visitor data leaves your server**
 
-[![Version](https://img.shields.io/badge/version-0.8.1-blue.svg)](https://littlewebshack.com)
+[![Version](https://img.shields.io/badge/version-0.8.2-blue.svg)](https://littlewebshack.com)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b.svg)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4.svg)](https://www.php.net)
 [![WP-CLI](https://img.shields.io/badge/WP--CLI-supported-7a7a7a.svg)](https://wp-cli.org)
@@ -195,7 +195,7 @@ Two public endpoints under the `mbr-isa/v1` namespace:
 - `POST /wp-json/mbr-isa/v1/ask` — accepts `{ query, session_id? }`, returns the structured chat response (intent hit or search results, with confidence, snippets, suggestions)
 - `POST /wp-json/mbr-isa/v1/feedback` — records a thumbs-up (`1`), thumbs-down (`-1`), or neutral (`0`) against a previously-logged `query_id`
 
-Both endpoints are public (no auth) but nonce-protected when called from the widget, and rate-limited per IP-hash. Results describe documents rather than chunks — collapse happens before the response is built. Full request and response shapes are in the [user guide](docs/mbr-intelligent-site-assistant-user-guide-v0.8.1.pdf).
+Both endpoints are public (no auth) but nonce-protected when called from the widget, and rate-limited per IP-hash. Results describe documents rather than chunks — collapse happens before the response is built. Full request and response shapes are in the [user guide](docs/mbr-intelligent-site-assistant-user-guide.pdf).
 
 > **Note for sites running REST hardening plugins:** if you have a "disable REST API for non-admin / logged-out users" setting enabled (common in security and performance plugins), allowlist the `mbr-isa/v1` namespace or the chat widget will be blocked at the REST layer.
 
@@ -209,7 +209,7 @@ If the DB schema version under **Diagnostics → Plugin Status** still reads bel
 
 ## Documentation
 
-The full [user guide (PDF)](docs/mbr-intelligent-site-assistant-user-guide-v0.8.1.pdf) covers everything in this README in greater depth, plus:
+The full [user guide (PDF)](docs/mbr-intelligent-site-assistant-user-guide.pdf) covers everything in this README in greater depth, plus:
 
 - The diagnostic dashboard, section by section
 - Every admin page, field by field

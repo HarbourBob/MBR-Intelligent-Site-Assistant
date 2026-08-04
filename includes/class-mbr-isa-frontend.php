@@ -22,6 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Public-facing chat widget. See the file docblock above for details.
+ */
 class MBR_ISA_Frontend {
 
 	const SHORTCODE      = 'mbr_isa_chat';
@@ -145,7 +148,7 @@ class MBR_ISA_Frontend {
 
 		$config = $this->get_widget_config();
 
-		echo $this->render_markup(
+		$markup = $this->render_markup(
 			[
 				'mode'         => 'floating',
 				'position'     => $config['position'],
@@ -156,7 +159,9 @@ class MBR_ISA_Frontend {
 				'theme_glass'  => $config['theme_glass'],
 				'extra_attrs'  => '',
 			]
-		); // Markup is internally escaped.
+		);
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_markup() escapes every field internally (esc_html()/esc_attr()) before returning; see its docblock.
+		echo $markup;
 	}
 
 	// -------------------------------------------------------------------------
@@ -354,7 +359,10 @@ class MBR_ISA_Frontend {
 			data-mbr-isa-mode="<?php echo esc_attr( $mode ); ?>"
 			data-mbr-isa-position="<?php echo esc_attr( $position ); ?>"
 			id="<?php echo esc_attr( $instance_id ); ?>"
-			<?php echo $extra_attrs; // Already escaped in caller ?>
+			<?php
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $extra_attrs is always '' or built by render_shortcode() from a regex-whitelisted value passed through esc_attr().
+			echo $extra_attrs;
+			?>
 		>
 			<?php if ( 'floating' === $mode ) : ?>
 				<button

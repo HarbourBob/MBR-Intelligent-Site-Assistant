@@ -13,6 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Deactivation handler — unschedules cron events.
+ */
 class MBR_ISA_Deactivator {
 
     /**

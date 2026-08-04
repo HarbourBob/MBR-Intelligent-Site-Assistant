@@ -12,6 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Simple per-IP-hash request throttling using transients.
+ */
 class MBR_ISA_Rate_Limiter {
 
     /**
@@ -50,7 +53,7 @@ class MBR_ISA_Rate_Limiter {
      * @return string
      */
     public static function hash_current_ip() {
-        $ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+        $ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
         if ( '' === $ip ) {
             return '';
         }

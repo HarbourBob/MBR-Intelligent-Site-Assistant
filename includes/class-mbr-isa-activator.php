@@ -9,6 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Activation handler — creates database tables, seeds defaults.
+ */
 class MBR_ISA_Activator {
 
     /**
@@ -52,6 +55,7 @@ class MBR_ISA_Activator {
                 )
             );
             if ( $has_old_key ) {
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter -- DDL statement; $documents_table is derived from $wpdb->prefix, not user input, and identifiers cannot be placeholder-bound.
                 $wpdb->query( "ALTER TABLE {$documents_table} DROP INDEX post_id" );
             }
         }
@@ -91,6 +95,7 @@ class MBR_ISA_Activator {
         );
 
         if ( ! $exists ) {
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- DDL statement supplied by internal callers only (see run_schema_upgrade()); identifiers cannot be placeholder-bound.
             $wpdb->query( $sql );
         }
     }
@@ -98,8 +103,8 @@ class MBR_ISA_Activator {
     /**
      * Create the four core tables using dbDelta.
      *
-     * dbDelta is idempotent: safe to run repeatedly, will alter existing
-     * tables to match the declared schema.
+     * The dbDelta() call is idempotent: safe to run repeatedly, will alter
+     * existing tables to match the declared schema.
      *
      * @return void
      */

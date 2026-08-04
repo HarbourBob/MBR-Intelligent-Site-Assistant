@@ -16,6 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Admin UI for chat-widget appearance. See the file docblock above for details.
+ */
 class MBR_ISA_Admin_Theme {
 
     const PAGE_SLUG    = 'mbr-isa-appearance';
@@ -430,7 +433,7 @@ class MBR_ISA_Admin_Theme {
 
     public function handle_save() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( self::ACTION_SAVE );
 

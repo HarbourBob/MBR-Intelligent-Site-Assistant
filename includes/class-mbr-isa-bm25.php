@@ -27,23 +27,28 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * BM25 scoring engine. See the file docblock above for details.
+ */
 class MBR_ISA_BM25 {
 
     /**
-     * k1 — term frequency saturation parameter.
+     * Term frequency saturation parameter (k1).
      *
      * @var float
      */
     private $k1;
 
     /**
-     * b — length normalisation parameter.
+     * Length normalisation parameter (b).
      *
      * @var float
      */
     private $b;
 
     /**
+     * Set the BM25 tuning parameters.
+     *
      * @param float $k1 Typically 1.2–2.0. Default 1.2.
      * @param float $b  Between 0 and 1. Default 0.75.
      */

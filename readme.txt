@@ -1,10 +1,10 @@
 === MBR Intelligent Site Assistant ===
-Contributors: Robert Palmer
+Contributors: Robert Palmer, alkesh7
 Tags: search, chatbot, ai, site assistant, intelligent search
 Requires at least: 5.8
-Tested up to: 6.7
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.8.1
+Stable tag: 0.8.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,8 +18,8 @@ A comprehensive User Guide (PDF) is bundled in the ZIP file.
 
 Key features:
 
-* Self-hosted â no API keys, no external services, nothing leaves your server.
-* Works on every WordPress host â pure PHP, no unusual extensions needed.
+* Self-hosted — no API keys, no external services, nothing leaves your server.
+* Works on every WordPress host — pure PHP, no unusual extensions needed.
 * Intent matching for common questions (contact, pricing, services).
 * Synonym expansion so "WP" finds "WordPress".
 * Porter stemming so "building" matches "build".
@@ -30,9 +30,25 @@ Key features:
 
 1. Upload the plugin folder to `/wp-content/plugins/`.
 2. Activate through the 'Plugins' menu in WordPress.
-3. Go to MBR Site Assistant â MBR ISA Diagnostics to verify installation.
+3. Go to MBR Site Assistant → MBR ISA Diagnostics to verify installation.
+
+== Third-Party Services ==
+
+The plugin makes zero outbound HTTP requests on the visitor path — every query is answered from data already on your own server, and PDF text extraction runs locally in pure PHP.
+
+The one exception is the bundled update checker, which performs a periodic version lookup against a public GitHub manifest (raw.githubusercontent.com/HarbourBob/mbr-updates) and downloads the update package from littlewebshack.com only when you choose to install an update. It transmits no visitor data, no site content, and no identifiers. If you would rather have no outbound requests at all, remove the bundled `plugin-update-checker` directory and update the plugin manually.
 
 == Changelog ==
+
+= 0.8.2 =
+* Security: Hardened several `wp_unslash()`/sanitisation gaps flagged by a WPCS audit (`widget_position`, `REMOTE_ADDR` reads used for rate limiting and query logging). No known exploitability — these were defence-in-depth fixes, not active vulnerabilities.
+* Fixed: The bundled update checker's `require_once` had no existence check, so a checkout or package missing the `plugin-update-checker` library directory would fatal on activation. Self-update registration is now skipped gracefully when the library is absent.
+* Fixed: A literal `—` escape (inside a single-quoted string, where PHP does not expand it) was printed as-is in a WP-CLI reindex error message instead of an em dash.
+* Fixed: Garbled `readme.txt` characters (double-encoded UTF-8 em dashes and an arrow) in the Description and Installation sections.
+* Changed: `includes/class-mbr-isa-cli.php` renamed to `includes/class-mbr-isa-cli-command.php` to match its class name, per WordPress Coding Standards file-naming rules.
+* Changed: Several previously-untranslated admin/REST strings ("Unauthorised", REST API error messages) now go through `__()`/`esc_html__()` with the `mbr-isa` text domain, and four `sprintf()` placeholders that were missing `translators:` comments now have them.
+* Changed: Added missing PHP class-level doc comments and PHPDoc summaries across the codebase for readability.
+* Note: This release is a WordPress Plugin Check (PCP) / WPCS compliance and hardening pass. No functional or database changes; no reindex required.
 
 = 0.8.1 =
 * Fixed: Search snippets from PDFs could be filled with rows of dots and stray page numbers, because table-of-contents leader runs were extracted as if they were text. Leader runs (dots, middots, bullets, dashes, underscores) and the page numbers they strand are now removed during extraction. This also stops them inflating a passage's length for BM25.
@@ -78,13 +94,13 @@ Key features:
 = 0.6.0 =
 * New: Tools > MBR ISA Appearance admin page for choosing the chat-widget colour scheme without touching CSS.
   - Five colour-coordinated presets: Mocha (default Catppuccin dark), Slate Light, Ocean, Sunset, Forest.
-  - Glassmorphism toggle layers on top of any preset â translucent panel with a backdrop blur, designed for sites with rich page backgrounds (hero images, gradients).
+  - Glassmorphism toggle layers on top of any preset — translucent panel with a backdrop blur, designed for sites with rich page backgrounds (hero images, gradients).
   - Live interactive preview rendered with the actual widget CSS over a moving gradient stage, so the preview communicates exactly how the widget will look on the front end.
   - Preset cards show the palette as colour swatches alongside the name and a dark/light badge.
 * Improved: Diagnostic page gains a third quick-access button alongside intents and synonyms.
 
 = 0.5.1 =
-* Improved: Synonym test panel now shows the original (unstemmed) word in brackets next to each token chip when it differs from the stem, so admins don't mistake "websit (website)" for a typo. Visitors never see the stemmed form â it only surfaces in the admin tester.
+* Improved: Synonym test panel now shows the original (unstemmed) word in brackets next to each token chip when it differs from the stem, so admins don't mistake "websit (website)" for a typo. Visitors never see the stemmed form — it only surfaces in the admin tester.
 
 = 0.5.0 =
 * New: Tools > MBR ISA Synonyms admin page for managing synonym groups without editing code.
@@ -101,11 +117,11 @@ Key features:
   - Per-intent enabled/disabled toggle (keep an intent in the list without firing it).
   - Test panel: type a query and see which intent (if any) would match.
   - Reset to defaults button.
-  - Inline regex validation for "re:" triggers â bad patterns rejected on save.
+  - Inline regex validation for "re:" triggers — bad patterns rejected on save.
 * New: Intent responses now support basic HTML (links, bold, line breaks, lists, etc.).
   Sanitised on save with wp_kses_post(). The widget renders message_html when present
   and falls back to plain-text message otherwise.
 * Improved: Diagnostic page now links to the new intents manager.
 
 = 0.1.0 =
-* Initial development release â bootstrap, database schema, tokeniser with Porter stemmer.
+* Initial development release — bootstrap, database schema, tokeniser with Porter stemmer.

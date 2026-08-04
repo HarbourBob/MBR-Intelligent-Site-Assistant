@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-tokeniser.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-bm25.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-chunker.php';
-require_once MBR_ISA_DIR . 'includes/class-mbr-isa-cli.php';
+require_once MBR_ISA_DIR . 'includes/class-mbr-isa-cli-command.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-pdf-extractor.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-indexer.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-synonyms.php';
@@ -26,6 +26,9 @@ require_once MBR_ISA_DIR . 'includes/class-mbr-isa-admin-intents.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-admin-synonyms.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-admin-theme.php';
 
+/**
+ * Main plugin class — singleton orchestrator.
+ */
 class MBR_ISA {
 
     private static $instance = null;
@@ -231,7 +234,7 @@ class MBR_ISA {
 
     public function handle_full_reindex() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( 'mbr_isa_full_reindex' );
 
@@ -246,7 +249,7 @@ class MBR_ISA {
 
     public function handle_save_widget_settings() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( 'mbr_isa_save_widget_settings' );
 
@@ -259,7 +262,7 @@ class MBR_ISA {
         $settings['widget_enabled'] = ! empty( $_POST['widget_enabled'] ) ? 1 : 0;
 
         // Position — whitelist.
-        $position = isset( $_POST['widget_position'] ) ? (string) $_POST['widget_position'] : 'bottom-right';
+        $position = isset( $_POST['widget_position'] ) ? sanitize_text_field( wp_unslash( $_POST['widget_position'] ) ) : 'bottom-right';
         if ( ! in_array( $position, [ 'bottom-right', 'bottom-left' ], true ) ) {
             $position = 'bottom-right';
         }
@@ -282,7 +285,7 @@ class MBR_ISA {
 
     public function handle_save_content_settings() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( 'mbr_isa_save_content_settings' );
 
@@ -405,18 +408,12 @@ class MBR_ISA {
 
         // --- Feedback stats & recent queries ----------------------------
         $queries_table = $wpdb->prefix . 'mbrisa_queries';
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- no user input in this query; {$queries_table} is derived from $wpdb->prefix, and every other value is a literal.
         $feedback_stats = $wpdb->get_row(
-            "SELECT
-                COUNT(*)                                           AS total,
-                SUM(CASE WHEN feedback = 1  THEN 1 ELSE 0 END)     AS thumbs_up,
-                SUM(CASE WHEN feedback = -1 THEN 1 ELSE 0 END)     AS thumbs_down,
-                SUM(CASE WHEN feedback IS NULL THEN 1 ELSE 0 END)  AS no_feedback,
-                SUM(CASE WHEN result_count = 0 THEN 1 ELSE 0 END)  AS zero_results,
-                SUM(CASE WHEN intent_matched IS NOT NULL THEN 1 ELSE 0 END) AS intent_hits
-             FROM {$queries_table}
-             WHERE created_at >= DATE_SUB( NOW(), INTERVAL 7 DAY )",
+            "SELECT COUNT(*) AS total, SUM(CASE WHEN feedback = 1 THEN 1 ELSE 0 END) AS thumbs_up, SUM(CASE WHEN feedback = -1 THEN 1 ELSE 0 END) AS thumbs_down, SUM(CASE WHEN feedback IS NULL THEN 1 ELSE 0 END) AS no_feedback, SUM(CASE WHEN result_count = 0 THEN 1 ELSE 0 END) AS zero_results, SUM(CASE WHEN intent_matched IS NOT NULL THEN 1 ELSE 0 END) AS intent_hits FROM {$queries_table} WHERE created_at >= DATE_SUB( NOW(), INTERVAL 7 DAY )",
             ARRAY_A
         );
+        // phpcs:enable
         if ( ! is_array( $feedback_stats ) ) {
             $feedback_stats = [
                 'total' => 0, 'thumbs_up' => 0, 'thumbs_down' => 0,
@@ -424,13 +421,12 @@ class MBR_ISA {
             ];
         }
 
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- no user input in this query; {$queries_table} is derived from $wpdb->prefix, and the LIMIT is a literal.
         $recent_queries = $wpdb->get_results(
-            "SELECT id, query_text, intent_matched, result_count, top_score, feedback, created_at
-             FROM {$queries_table}
-             ORDER BY created_at DESC
-             LIMIT 30",
+            "SELECT id, query_text, intent_matched, result_count, top_score, feedback, created_at FROM {$queries_table} ORDER BY created_at DESC LIMIT 30",
             ARRAY_A
         );
+        // phpcs:enable
         if ( ! is_array( $recent_queries ) ) {
             $recent_queries = [];
         }
@@ -494,14 +490,19 @@ class MBR_ISA {
             <?php if ( $reindex_msg ) : ?>
                 <?php $reindex_failed = (int) ( $reindex_msg['failed'] ?? 0 ); ?>
                 <div class="notice notice-<?php echo $reindex_failed ? 'error' : 'success'; ?>" style="margin-top:1em;"><p>
-                    <?php echo esc_html( sprintf(
+                    <?php
+                    echo esc_html( sprintf(
+                        /* translators: 1: Number of documents indexed. 2: Number of chunks written. 3: Time taken, in seconds. */
                         __( 'Reindex complete: %1$d documents as %2$d chunks in %3$s seconds.', 'mbr-isa' ),
                         (int) ( $reindex_msg['documents'] ?? 0 ),
                         (int) ( $reindex_msg['chunks'] ?? 0 ),
                         (string) ( $reindex_msg['duration'] ?? '?' )
-                    ) ); ?>
+                    ) );
+                    ?>
                     <?php if ( $reindex_failed ) : ?>
-                        <br><strong><?php echo esc_html( sprintf(
+                        <br><strong><?php
+                        echo esc_html( sprintf(
+                            /* translators: 1: Number of items that failed to write. 2: Total number of items attempted. */
                             __( '%1$d of %2$d items could not be written to the index. This usually means the database schema is out of date — check the DB Version above, and deactivate and reactivate the plugin to re-run the upgrade.', 'mbr-isa' ),
                             $reindex_failed,
                             (int) ( $reindex_msg['attempted'] ?? 0 )
@@ -885,7 +886,7 @@ class MBR_ISA {
                                 <td style="text-align:right;color:#666;font-family:monospace;font-size:12px;">
                                     <?php echo null === $row['top_score'] ? '—' : esc_html( round( (float) $row['top_score'], 2 ) ); ?>
                                 </td>
-                                <td style="text-align:center;"><?php echo $fb_icon; ?></td>
+                                <td style="text-align:center;"><?php echo $fb_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $fb_icon is always one of the four static HTML literals assigned above, never built from $row data. ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

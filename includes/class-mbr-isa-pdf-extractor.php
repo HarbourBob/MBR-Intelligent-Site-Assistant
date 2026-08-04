@@ -27,6 +27,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Pure-PHP PDF text extractor. See the file docblock above for details.
+ */
 class MBR_ISA_PDF_Extractor {
 
     /**

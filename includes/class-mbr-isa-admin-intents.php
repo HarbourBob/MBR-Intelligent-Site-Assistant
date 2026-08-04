@@ -20,6 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Admin UI for managing intents. See the file docblock above for details.
+ */
 class MBR_ISA_Admin_Intents {
 
     const PAGE_SLUG       = 'mbr-isa-intents';
@@ -29,7 +32,11 @@ class MBR_ISA_Admin_Intents {
     const ACTION_RESET    = 'mbr_isa_reset_intents';
     const NOTICE_KEY      = 'mbr_isa_intent_notice';
 
-    /** @var MBR_ISA_Intents */
+    /**
+     * Intents service providing the default intent set and matching logic.
+     *
+     * @var MBR_ISA_Intents
+     */
     private $intents_service;
 
     public function __construct( MBR_ISA_Intents $intents_service ) {
@@ -222,7 +229,10 @@ class MBR_ISA_Admin_Intents {
                         <code><?php echo esc_html( $test_hit['id'] ); ?></code>
                         <span class="mbr-isa-pill"><?php echo esc_html( $test_hit['label'] ); ?></span>
                         <span style="color:#666;font-size:12px;">
-                            <?php echo esc_html( sprintf( __( 'confidence: %s', 'mbr-isa' ), number_format_i18n( $test_hit['confidence'], 2 ) ) ); ?>
+                            <?php
+                            /* translators: %s: Matched intent's confidence score, formatted as a decimal. */
+                            echo esc_html( sprintf( __( 'confidence: %s', 'mbr-isa' ), number_format_i18n( $test_hit['confidence'], 2 ) ) );
+                            ?>
                         </span>
                         <div style="margin-top:.5em;font-size:13px;color:#444;">
                             <?php echo wp_kses_post( $test_hit['response'] ); ?>
@@ -365,6 +375,7 @@ class MBR_ISA_Admin_Intents {
                 <div style="margin-top:.5em;">
                     <form method="post"
                           action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+                          <?php /* translators: %s: The intent ID being deleted. */ ?>
                           onsubmit="return confirm('<?php echo esc_js( sprintf( __( 'Delete the "%s" intent? This cannot be undone.', 'mbr-isa' ), $id ) ); ?>');">
                         <?php wp_nonce_field( self::ACTION_DELETE . '_' . $id ); ?>
                         <input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_DELETE ); ?>">
@@ -396,7 +407,7 @@ class MBR_ISA_Admin_Intents {
 
     public function handle_save() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( self::ACTION_SAVE );
 
@@ -404,9 +415,12 @@ class MBR_ISA_Admin_Intents {
         $is_new      = ( '' === $original_id );
 
         $new_id      = isset( $_POST['intent_id'] )         ? sanitize_key( wp_unslash( $_POST['intent_id'] ) ) : '';
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- unslashed here, sanitized on the next line via sanitize_text_field().
         $label_raw   = isset( $_POST['intent_label'] )      ? wp_unslash( $_POST['intent_label'] )              : '';
         $label       = sanitize_text_field( $label_raw );
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- unslashed here, sanitized/validated by parse_triggers() below (strips control chars, dedupes).
         $triggers_raw= isset( $_POST['intent_triggers'] )   ? wp_unslash( $_POST['intent_triggers'] )           : '';
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- unslashed here, sanitized via wp_kses_post() before use/storage (see below).
         $response_raw= isset( $_POST['intent_response'] )   ? wp_unslash( $_POST['intent_response'] )           : '';
         $confidence  = isset( $_POST['intent_confidence'] ) ? (float) $_POST['intent_confidence']               : 1.0;
         $disabled    = ! empty( $_POST['intent_disabled'] );
@@ -524,7 +538,7 @@ class MBR_ISA_Admin_Intents {
 
     public function handle_delete() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
 
         $id = isset( $_POST['intent_id'] ) ? sanitize_key( wp_unslash( $_POST['intent_id'] ) ) : '';
@@ -571,7 +585,7 @@ class MBR_ISA_Admin_Intents {
 
     public function handle_reset() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( self::ACTION_RESET );
 

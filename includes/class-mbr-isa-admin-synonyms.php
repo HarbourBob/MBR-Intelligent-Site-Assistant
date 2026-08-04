@@ -25,6 +25,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Admin UI for managing synonym groups. See the file docblock above for details.
+ */
 class MBR_ISA_Admin_Synonyms {
 
     const PAGE_SLUG     = 'mbr-isa-synonyms';
@@ -34,10 +37,18 @@ class MBR_ISA_Admin_Synonyms {
     const ACTION_RESET  = 'mbr_isa_reset_synonyms';
     const NOTICE_KEY    = 'mbr_isa_synonym_notice';
 
-    /** @var MBR_ISA_Synonyms */
+    /**
+     * Synonyms service providing the default group set and expansion logic.
+     *
+     * @var MBR_ISA_Synonyms
+     */
     private $synonyms_service;
 
-    /** @var MBR_ISA_Tokeniser */
+    /**
+     * Tokeniser used by the synonym expansion test panel.
+     *
+     * @var MBR_ISA_Tokeniser
+     */
     private $tokeniser;
 
     public function __construct( MBR_ISA_Synonyms $synonyms_service, MBR_ISA_Tokeniser $tokeniser ) {
@@ -446,14 +457,16 @@ class MBR_ISA_Admin_Synonyms {
 
     public function handle_save() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( self::ACTION_SAVE );
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- unslashed here; cast to int on the next line (only ever used as an array index or null).
         $original_index_raw = isset( $_POST['original_index'] ) ? (string) wp_unslash( $_POST['original_index'] ) : '';
         $is_new             = ( '' === $original_index_raw );
         $original_index     = $is_new ? null : (int) $original_index_raw;
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- unslashed here, sanitized/validated by parse_terms() below (strips control chars, sanitize_text_field() per term).
         $terms_raw = isset( $_POST['terms'] ) ? (string) wp_unslash( $_POST['terms'] ) : '';
         $terms     = $this->parse_terms( $terms_raw );
 
@@ -502,7 +515,7 @@ class MBR_ISA_Admin_Synonyms {
 
     public function handle_delete() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
 
         $index = isset( $_POST['index'] ) ? (int) $_POST['index'] : -1;
@@ -543,7 +556,7 @@ class MBR_ISA_Admin_Synonyms {
 
     public function handle_reset() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
+            wp_die( esc_html__( 'Unauthorised', 'mbr-isa' ) );
         }
         check_admin_referer( self::ACTION_RESET );
 
