@@ -153,7 +153,25 @@ class MBR_ISA_Indexer {
         // relevant passage deep inside a 30-page PDF competes on equal terms
         // with a short page. Search collapses chunks back to one result per
         // post (see search()).
-        $chunks = $this->chunker->chunk( $plain_content );
+        //
+        // PDF text carries page markers, so chunks from a PDF also record
+        // the page they begin on, which lets a result link open the file at
+        // that page.
+        $chunk_pages = [];
+        if ( 'attachment' === $post->post_type
+            && false !== strpos( $plain_content, MBR_ISA_PDF_Extractor::PAGE_MARKER ) ) {
+            $paged  = $this->chunker->chunk_with_pages(
+                $plain_content,
+                MBR_ISA_PDF_Extractor::PAGE_MARKER
+            );
+            $chunks = [];
+            foreach ( $paged as $p ) {
+                $chunks[]      = $p['text'];
+                $chunk_pages[] = (int) $p['page'];
+            }
+        } else {
+            $chunks = $this->chunker->chunk( $plain_content );
+        }
         if ( empty( $chunks ) ) {
             $chunks = [ '' ];
         }
@@ -220,9 +238,10 @@ class MBR_ISA_Indexer {
                     'token_count'  => $row_token_count,
                     'content_hash' => $content_hash,
                     'is_contents'  => $this->chunker->looks_like_contents( $chunk_text ) ? 1 : 0,
+                    'page_number'  => isset( $chunk_pages[ $chunk_index ] ) ? (int) $chunk_pages[ $chunk_index ] : 0,
                     'indexed_at'   => current_time( 'mysql' ),
                 ],
-                [ '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s' ]
+                [ '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%s' ]
             );
             $doc_id = (int) $wpdb->insert_id;
 
@@ -520,8 +539,7 @@ class MBR_ISA_Indexer {
         $doc_ids_placeholder = implode( ',', array_fill( 0, count( $candidate_ids ), '%d' ) );
         $doc_rows = $wpdb->get_results(
             $wpdb->prepare(
-                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see $doc_ids_placeholder comment above; table name is from $wpdb->prefix.
-                "SELECT doc_id, post_id, chunk_index, post_type, title, excerpt, url FROM {$wpdb->prefix}mbrisa_documents WHERE doc_id IN ($doc_ids_placeholder)",
+                "SELECT doc_id, post_id, chunk_index, post_type, title, excerpt, url, page_number FROM {$wpdb->prefix}mbrisa_documents WHERE doc_id IN ($doc_ids_placeholder)",
                 ...$candidate_ids
             ),
             OBJECT_K
@@ -547,6 +565,7 @@ class MBR_ISA_Indexer {
                 'doc_id'      => (int) $row->doc_id,
                 'post_id'     => $post_id,
                 'chunk_index' => (int) $row->chunk_index,
+                'page_number' => (int) $row->page_number,
                 'post_type'   => $row->post_type,
                 'title'       => $row->title,
                 'excerpt'     => $row->excerpt,

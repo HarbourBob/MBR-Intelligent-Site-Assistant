@@ -113,6 +113,72 @@ class MBR_ISA_Chunker {
         return $chunks;
     }
 
+    /**
+     * Split text into chunks, recording which page each chunk begins on.
+     *
+     * Used for PDFs, whose extracted text carries a page marker between
+     * pages. A chunk that straddles a boundary is attributed to the page it
+     * starts on, which is where a reader following the link should land.
+     *
+     * @param string $text   Plain text containing page markers.
+     * @param string $marker Page marker sentinel.
+     * @return array<int,array{text:string,page:int}>
+     */
+    public function chunk_with_pages( $text, $marker ) {
+        $text = trim( preg_replace( '/\s+/u', ' ', (string) $text ) );
+        if ( '' === $text ) {
+            return [];
+        }
+
+        $words = preg_split( '/ /', $text, -1, PREG_SPLIT_NO_EMPTY );
+        if ( empty( $words ) ) {
+            return [];
+        }
+
+        // Page number for each word position: starts at page 1 and advances
+        // every time a marker is passed.
+        $page_at = [];
+        $page    = 1;
+        foreach ( $words as $i => $w ) {
+            if ( $marker === $w ) {
+                $page++;
+                $page_at[ $i ] = $page;
+                continue;
+            }
+            $page_at[ $i ] = $page;
+        }
+
+        $out   = [];
+        $total = count( $words );
+        $step  = max( 1, $this->size_words - $this->overlap_words );
+
+        if ( $total <= (int) floor( $this->size_words * 1.5 ) ) {
+            return [ [ 'text' => implode( ' ', $words ), 'page' => 1 ] ];
+        }
+
+        for ( $start = 0; $start < $total; $start += $step ) {
+            $slice = array_slice( $words, $start, $this->size_words );
+            if ( empty( $slice ) ) {
+                break;
+            }
+
+            $remaining_after = $total - ( $start + $this->size_words );
+            if ( $remaining_after > 0 && $remaining_after <= $this->overlap_words ) {
+                $slice = array_slice( $words, $start );
+                $out[] = [ 'text' => implode( ' ', $slice ), 'page' => $page_at[ $start ] ?? 1 ];
+                break;
+            }
+
+            $out[] = [ 'text' => implode( ' ', $slice ), 'page' => $page_at[ $start ] ?? 1 ];
+
+            if ( $start + $this->size_words >= $total ) {
+                break;
+            }
+        }
+
+        return $out;
+    }
+
     // --- Accessors (useful for logging/diagnostics) --------------------------
 
     public function get_size_words() {
@@ -143,7 +209,7 @@ class MBR_ISA_Chunker {
      * @return bool
      */
     public function looks_like_contents( $text ) {
-        $text = trim( (string) $text );
+        $text = trim( str_replace( [ "\xc2\xb6", "\xc2\xa4" ], ' ', (string) $text ) );
         if ( '' === $text ) {
             return false;
         }

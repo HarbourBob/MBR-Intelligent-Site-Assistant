@@ -24,6 +24,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class MBR_ISA_Tokeniser {
 
     /**
+     * Sentinel marking a block-element boundary in extracted text.
+     */
+    const BLOCK_MARKER = "\xc2\xb6";
+
+    /**
      * Minimum token length after cleaning. Single letters rarely useful.
      */
     const MIN_TOKEN_LENGTH = 2;
@@ -107,6 +112,21 @@ class MBR_ISA_Tokeniser {
         // Drop HTML comments, which can carry block-editor JSON.
         $text = preg_replace( '/<!--.*?-->/s', ' ', (string) $text );
 
+        // Mark block-level boundaries before stripping tags. Two reasons:
+        // strip_tags() alone turns "<p>one</p><p>two</p>" into "onetwo",
+        // fabricating a word that appears nowhere on the page; and deep
+        // links need to know where blocks end, because a browser will not
+        // match a text fragment that spans a block boundary.
+        //
+        // The marker is a pilcrow, which survives chunking as an ordinary
+        // word, is stripped by clean() before tokenising (so it is never
+        // indexed), and is removed again before any snippet is displayed.
+        $text = preg_replace(
+            '#</?(?:p|div|section|article|header|footer|aside|main|nav|h[1-6]|li|ul|ol|dl|dt|dd|tr|td|th|table|thead|tbody|blockquote|pre|figure|figcaption|br|hr)\b[^>]*>#i',
+            ' ' . self::BLOCK_MARKER . ' ',
+            (string) $text
+        );
+
         // Strip remaining HTML.
         $text = wp_strip_all_tags( (string) $text );
 
@@ -120,7 +140,15 @@ class MBR_ISA_Tokeniser {
         // Collapse whitespace.
         $text = preg_replace( '/\s+/u', ' ', (string) $text );
 
-        return trim( (string) $text );
+        // Collapse runs of block markers (</p><p> produces two) and trim
+        // them from the ends, where they carry no information.
+        $text = preg_replace(
+            '/(?:' . self::BLOCK_MARKER . '\s*)+/u',
+            self::BLOCK_MARKER . ' ',
+            (string) $text
+        );
+
+        return trim( (string) $text, " \t\n\r\0\x0B" . self::BLOCK_MARKER );
     }
 
     /**

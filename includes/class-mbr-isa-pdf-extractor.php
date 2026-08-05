@@ -33,6 +33,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class MBR_ISA_PDF_Extractor {
 
     /**
+     * Sentinel marking a page boundary in extracted text. Survives chunking
+     * as an ordinary word, is stripped before tokenising so it is never
+     * indexed, and is removed before any snippet is displayed.
+     */
+    const PAGE_MARKER = "\xc2\xa4";
+
+    /**
      * Default maximum file size to attempt, in bytes. Larger files are skipped
      * to protect memory on shared hosting. Overridable per-call.
      */
@@ -100,7 +107,19 @@ class MBR_ISA_PDF_Extractor {
             return $this->fail( 'encrypted' );
         }
 
-        $text = $this->extract_from_streams( $data );
+        $pages = $this->extract_by_page( $data );
+
+        if ( null !== $pages && ! empty( $pages ) ) {
+            // Join with a page marker so downstream code can attribute each
+            // passage to a page number and deep-link to it.
+            $text = implode( ' ' . self::PAGE_MARKER . ' ', $pages );
+        } else {
+            // Structure could not be read (object streams, an unusual page
+            // tree, a damaged file). Fall back to the flat whole-document
+            // walk, which yields text but no page numbers.
+            $text = $this->extract_from_streams( $data );
+        }
+
         $text = $this->normalise( $text );
 
         if ( '' === $text ) {
@@ -115,6 +134,318 @@ class MBR_ISA_PDF_Extractor {
 
         $this->last_status = 'ok';
         return $text;
+    }
+
+    // =========================================================================
+    // Page-aware extraction.
+    // =========================================================================
+
+    /**
+     * Extract text page by page, in document order.
+     *
+     * PDF stores content in indirect objects whose file order need not match
+     * reading order, so the page sequence is read from the catalogue's page
+     * tree rather than assumed. Returns null when the structure cannot be
+     * read — in which case the caller falls back to the flat walk, and the
+     * only thing lost is page numbers.
+     *
+     * @param string $data Raw PDF bytes.
+     * @return string[]|null One entry per page, or null if unavailable.
+     */
+    private function extract_by_page( $data ) {
+        // Object streams (PDF 1.5+) hide object definitions inside compressed
+        // streams. Decoding those is a different job; bail to the flat walk.
+        if ( false !== strpos( $data, '/ObjStm' ) ) {
+            return null;
+        }
+
+        $objects = $this->index_objects( $data );
+        if ( count( $objects ) < 2 ) {
+            return null;
+        }
+
+        $order = $this->page_order( $objects );
+        if ( empty( $order ) ) {
+            return null;
+        }
+
+        $pages = [];
+        $total = 0;
+
+        foreach ( $order as $obj_num ) {
+            $body = $objects[ $obj_num ] ?? '';
+            $text = '';
+
+            foreach ( $this->content_stream_refs( $body ) as $ref ) {
+                if ( ! isset( $objects[ $ref ] ) ) {
+                    continue;
+                }
+                $text .= $this->text_from_object( $objects[ $ref ] );
+            }
+
+            $pages[] = trim( $text );
+            $total  += strlen( $text );
+
+            if ( $total > self::MAX_OUTPUT_CHARS * 4 ) {
+                break;
+            }
+        }
+
+        // If nothing came out, the page walk found no usable content and the
+        // flat walk deserves a turn.
+        if ( '' === trim( implode( '', $pages ) ) ) {
+            return null;
+        }
+
+        return $this->strip_running_headers( $pages );
+    }
+
+    /**
+     * Remove running headers and footers repeated across pages.
+     *
+     * A page header such as "Acme Handbook · Version 2 · Page 14" appears on
+     * every page. Left in, it lands in the middle of search snippets and
+     * inflates the term frequency of whatever words it contains, making a
+     * document look more relevant to its own title than it should be.
+     *
+     * Detection is by agreement rather than pattern: words shared by most
+     * pages at the same position, at the start or the end of the page, are
+     * boilerplate. Only pages that actually carry the boilerplate lose it.
+     *
+     * @param string[] $pages Page texts in reading order.
+     * @return string[]
+     */
+    private function strip_running_headers( array $pages ) {
+        $count = count( $pages );
+        if ( $count < 3 ) {
+            return $pages;
+        }
+
+        $words = [];
+        foreach ( $pages as $p ) {
+            $words[] = preg_split( '/\s+/u', trim( $p ), -1, PREG_SPLIT_NO_EMPTY ) ?: [];
+        }
+
+        $prefix_len = $this->common_run_length( $words, true );
+        $suffix_len = $this->common_run_length( $words, false );
+
+        if ( 0 === $prefix_len && 0 === $suffix_len ) {
+            return $pages;
+        }
+
+        $out = [];
+        foreach ( $words as $w ) {
+            if ( $prefix_len > 0 && count( $w ) > $prefix_len ) {
+                $w = array_slice( $w, $prefix_len );
+
+                // The page number itself varies, so it is never part of the
+                // shared run — but it sits immediately after it.
+                if ( isset( $w[0] ) && preg_match( '/^\d{1,4}$/', $w[0] ) ) {
+                    $w = array_slice( $w, 1 );
+                }
+            }
+            if ( $suffix_len > 0 && count( $w ) > $suffix_len ) {
+                $w = array_slice( $w, 0, count( $w ) - $suffix_len );
+
+                if ( ! empty( $w ) && preg_match( '/^\d{1,4}$/', $w[ count( $w ) - 1 ] ) ) {
+                    array_pop( $w );
+                }
+            }
+            $out[] = implode( ' ', $w );
+        }
+
+        return $out;
+    }
+
+    /**
+     * Length of the run of words most pages share at one end.
+     *
+     * @param array<int,string[]> $words   Word arrays, one per page.
+     * @param bool                $at_start True for prefix, false for suffix.
+     * @return int Number of words, 0 if there is no agreement.
+     */
+    private function common_run_length( array $words, $at_start ) {
+        $pages = count( $words );
+        $limit = 20;   // never treat more than this as furniture
+        $run   = 0;
+
+        for ( $i = 0; $i < $limit; $i++ ) {
+            $tally = [];
+            foreach ( $words as $w ) {
+                $n = count( $w );
+                if ( $n <= $i + 1 ) {
+                    continue;
+                }
+                $word = $at_start ? $w[ $i ] : $w[ $n - 1 - $i ];
+                $key  = mb_strtolower( $word );
+                $tally[ $key ] = ( $tally[ $key ] ?? 0 ) + 1;
+            }
+
+            if ( empty( $tally ) ) {
+                break;
+            }
+
+            arsort( $tally );
+            $top = reset( $tally );
+
+            // Agreement across most pages means furniture, not content. A
+            // varying page number breaks the run, which is why the caller
+            // removes a trailing bare number separately.
+            if ( $top / $pages < 0.6 ) {
+                break;
+            }
+
+            $run = $i + 1;
+        }
+
+        // A single shared word is coincidence, not a header.
+        return $run >= 3 ? $run : 0;
+    }
+
+    /**
+     * Map indirect object numbers to their raw bodies.
+     *
+     * Each object runs from its own "N G obj" header to the start of the
+     * next one. Slicing on the next header rather than on "endobj" avoids
+     * being fooled by those bytes occurring inside binary stream data.
+     *
+     * @param string $data Raw PDF bytes.
+     * @return array<int,string> Object number => body.
+     */
+    private function index_objects( $data ) {
+        if ( ! preg_match_all( '/(?:^|[\r\n\s])(\d{1,7})\s+(\d{1,5})\s+obj\b/', $data, $m, PREG_OFFSET_CAPTURE ) ) {
+            return [];
+        }
+
+        $objects = [];
+        $count   = count( $m[0] );
+
+        for ( $i = 0; $i < $count; $i++ ) {
+            $num   = (int) $m[1][ $i ][0];
+            $start = (int) $m[0][ $i ][1];
+            $end   = ( $i + 1 < $count ) ? (int) $m[0][ $i + 1 ][1] : strlen( $data );
+
+            // Later definitions win, matching how incremental updates work.
+            $objects[ $num ] = substr( $data, $start, $end - $start );
+        }
+
+        return $objects;
+    }
+
+    /**
+     * Determine page object numbers in reading order.
+     *
+     * Walks the catalogue's /Pages tree. Falls back to every object marked
+     * /Type /Page in numeric order, which is correct for the great majority
+     * of generators even though the specification does not require it.
+     *
+     * @param array<int,string> $objects Object map.
+     * @return int[] Page object numbers, in order.
+     */
+    private function page_order( array $objects ) {
+        $root = null;
+
+        foreach ( $objects as $num => $body ) {
+            if ( preg_match( '#/Type\s*/Catalog\b#', $body ) ) {
+                if ( preg_match( '#/Pages\s+(\d+)\s+\d+\s+R#', $body, $m ) ) {
+                    $root = (int) $m[1];
+                }
+                break;
+            }
+        }
+
+        $order = [];
+
+        if ( null !== $root ) {
+            $this->walk_page_tree( $objects, $root, $order, 0 );
+        }
+
+        if ( empty( $order ) ) {
+            foreach ( $objects as $num => $body ) {
+                if ( preg_match( '#/Type\s*/Page\b(?!s)#', $body ) ) {
+                    $order[] = (int) $num;
+                }
+            }
+            sort( $order, SORT_NUMERIC );
+        }
+
+        return $order;
+    }
+
+    /**
+     * Recursively collect page objects from a /Pages node.
+     *
+     * @param array<int,string> $objects Object map.
+     * @param int               $node    Object number to visit.
+     * @param int[]             $order   Accumulator, by reference.
+     * @param int               $depth   Recursion guard.
+     * @return void
+     */
+    private function walk_page_tree( array $objects, $node, array &$order, $depth ) {
+        if ( $depth > 32 || ! isset( $objects[ $node ] ) || count( $order ) > 5000 ) {
+            return;
+        }
+
+        $body = $objects[ $node ];
+
+        if ( preg_match( '#/Type\s*/Page\b(?!s)#', $body ) ) {
+            $order[] = (int) $node;
+            return;
+        }
+
+        if ( ! preg_match( '#/Kids\s*\[(.*?)\]#s', $body, $m ) ) {
+            return;
+        }
+
+        if ( preg_match_all( '/(\d+)\s+\d+\s+R/', $m[1], $kids ) ) {
+            foreach ( $kids[1] as $kid ) {
+                $this->walk_page_tree( $objects, (int) $kid, $order, $depth + 1 );
+            }
+        }
+    }
+
+    /**
+     * Object numbers referenced by a page's /Contents entry.
+     *
+     * /Contents is either a single reference or an array of them, whose
+     * streams concatenate to form the page's content stream.
+     *
+     * @param string $body Page object body.
+     * @return int[]
+     */
+    private function content_stream_refs( $body ) {
+        if ( ! preg_match( '#/Contents\s*(\[[^\]]*\]|\d+\s+\d+\s+R)#s', $body, $m ) ) {
+            return [];
+        }
+
+        if ( ! preg_match_all( '/(\d+)\s+\d+\s+R/', $m[1], $refs ) ) {
+            return [];
+        }
+
+        return array_map( 'intval', $refs[1] );
+    }
+
+    /**
+     * Decode and parse the text out of one content-stream object.
+     *
+     * @param string $body Object body, including its stream.
+     * @return string
+     */
+    private function text_from_object( $body ) {
+        if ( ! preg_match( '/stream\r?\n(.*?)\r?\n?endstream/s', $body, $m ) ) {
+            return '';
+        }
+
+        $content = $this->decode_stream( $m[1] );
+        if ( '' === $content ) {
+            return '';
+        }
+
+        if ( ! preg_match( '/[\)\]>]\s*T[jJ][^a-zA-Z]/', $content ) ) {
+            return '';
+        }
+
+        return $this->parse_content_stream( $content ) . "\n";
     }
 
     /**
@@ -713,13 +1044,13 @@ class MBR_ISA_PDF_Extractor {
         $text = (string) $text;
 
         // Remove leader runs — the rows of dots that join a contents-page
-        // heading to its page number. They are visual furniture: they carry
-        // no meaning, they swallow most of a search snippet's window, and
-        // they inflate the chunk's length for BM25. Handles full stops,
-        // middots, bullets, one-dot leaders, underscores and dashes.
-        // Four or more in a row is well clear of an ellipsis.
+        // heading to its page number — together with the page number that
+        // immediately follows one. Handling both in a single pattern means
+        // a bare number is only ever removed when a leader run introduced
+        // it, so ordinary text like a page footer reading "Page 4" ahead of
+        // a numbered heading is left intact.
         $stripped = preg_replace(
-            '/(?:\s*[.\x{00B7}\x{2022}\x{2024}\x{2027}_\x{2013}\x{2014}-]\s*){4,}/u',
+            '/(?:\s*[.\x{00B7}\x{2022}\x{2024}\x{2027}_\x{2013}\x{2014}-]\s*){4,}(\s*\d{1,4}\b)?/u',
             ' ',
             $text
         );
@@ -734,26 +1065,17 @@ class MBR_ISA_PDF_Extractor {
             $text = $collapsed;
         }
 
-        // A leader run usually leaves its page number stranded between the
-        // heading and the next entry ("Installation 7 3. How it works").
-        // Drop a bare number only where it sits between a letter and a
-        // following digit-and-full-stop, which is the contents-page shape;
-        // ordinary prose numbers are left alone. Repeated because matches
-        // overlap on consecutive entries.
-        for ( $pass = 0; $pass < 2; $pass++ ) {
-            $stripped = preg_replace( '/(?<=[\p{L}?!)\]]) \d{1,4} (?=\d{1,3}\.\s)/u', ' ', $text );
-            if ( null === $stripped || $stripped === $text ) {
-                break;
-            }
-            $text = $stripped;
-        }
-
         // Final whitespace tidy.
         $text = preg_replace( '/\s+/u', ' ', $text );
         if ( null === $text ) {
             $text = preg_replace( '/\s+/', ' ', '' );
         }
 
-        return trim( (string) $text );
+        // Page markers are positional: each one is a page boundary, so runs
+        // must NOT be collapsed and leading markers must not be trimmed. A
+        // blank page that produced no text still occupies a page number, and
+        // dropping its marker would shift every later page's number by one,
+        // sending deep links to the wrong page.
+        return trim( (string) $text, " \t\n\r\0\x0B" );
     }
 }
