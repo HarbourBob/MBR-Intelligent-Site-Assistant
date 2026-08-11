@@ -11,9 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-tokeniser.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-bm25.php';
-require_once MBR_ISA_DIR . 'includes/class-mbr-isa-chunker.php';
-require_once MBR_ISA_DIR . 'includes/class-mbr-isa-cli.php';
-require_once MBR_ISA_DIR . 'includes/class-mbr-isa-pdf-extractor.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-indexer.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-synonyms.php';
 require_once MBR_ISA_DIR . 'includes/class-mbr-isa-intents.php';
@@ -32,7 +29,6 @@ class MBR_ISA {
 
     private $tokeniser     = null;
     private $bm25          = null;
-    private $pdf_extractor = null;
     private $indexer       = null;
     private $synonyms      = null;
     private $intents       = null;
@@ -90,9 +86,8 @@ class MBR_ISA {
         $this->admin_theme()->register_hooks();
 
         add_action( 'rest_api_init', [ $this->rest(), 'register_routes' ] );
-        add_action( 'admin_post_mbr_isa_full_reindex',          [ $this, 'handle_full_reindex' ] );
-        add_action( 'admin_post_mbr_isa_save_widget_settings',  [ $this, 'handle_save_widget_settings' ] );
-        add_action( 'admin_post_mbr_isa_save_content_settings', [ $this, 'handle_save_content_settings' ] );
+        add_action( 'admin_post_mbr_isa_full_reindex',         [ $this, 'handle_full_reindex' ] );
+        add_action( 'admin_post_mbr_isa_save_widget_settings', [ $this, 'handle_save_widget_settings' ] );
     }
 
     // --- Top-level admin menu ------------------------------------------------
@@ -137,16 +132,9 @@ class MBR_ISA {
         return $this->bm25;
     }
 
-    public function pdf_extractor() {
-        if ( null === $this->pdf_extractor ) {
-            $this->pdf_extractor = new MBR_ISA_PDF_Extractor();
-        }
-        return $this->pdf_extractor;
-    }
-
     public function indexer() {
         if ( null === $this->indexer ) {
-            $this->indexer = new MBR_ISA_Indexer( $this->tokeniser(), $this->bm25(), $this->pdf_extractor() );
+            $this->indexer = new MBR_ISA_Indexer( $this->tokeniser(), $this->bm25() );
         }
         return $this->indexer;
     }
@@ -277,64 +265,6 @@ class MBR_ISA {
         update_option( 'mbr_isa_settings', $settings );
 
         wp_safe_redirect( admin_url( 'admin.php?page=mbr-isa-diagnostic&widget-saved=1#mbr-isa-widget-settings' ) );
-        exit;
-    }
-
-    public function handle_save_content_settings() {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Unauthorised' );
-        }
-        check_admin_referer( 'mbr_isa_save_content_settings' );
-
-        $settings = get_option( 'mbr_isa_settings', [] );
-        if ( ! is_array( $settings ) ) {
-            $settings = [];
-        }
-
-        /*
-         * Post types. Unchecking everything is a legitimate configuration
-         * (PDF-only search), so an empty selection is stored as an empty array
-         * rather than being silently reset to the defaults.
-         *
-         * Submitted slugs are sanitised and then checked against the set the
-         * form is allowed to offer: publicly-viewable registered types, plus
-         * whatever was already saved. The latter keeps a type belonging to a
-         * temporarily-inactive plugin from being dropped, while still refusing
-         * an arbitrary slug posted by hand.
-         */
-        $previous_types = $settings['enabled_post_types'] ?? [ 'post', 'page' ];
-        if ( ! is_array( $previous_types ) ) {
-            $previous_types = [ 'post', 'page' ];
-        }
-        $previous_types = array_map( 'strval', $previous_types );
-
-        $public_types = array_keys( get_post_types( [ 'public' => true ], 'names' ) );
-        $public_types = array_diff( $public_types, [ 'attachment' ] );
-
-        $allowed_types = array_unique( array_merge( $public_types, $previous_types ) );
-
-        $submitted_types = isset( $_POST['enabled_post_types'] ) && is_array( $_POST['enabled_post_types'] )
-            ? array_map( 'sanitize_key', wp_unslash( $_POST['enabled_post_types'] ) )
-            : [];
-
-        $settings['enabled_post_types'] = array_values(
-            array_unique( array_intersect( $submitted_types, $allowed_types ) )
-        );
-
-        $settings['index_pdfs'] = ! empty( $_POST['index_pdfs'] ) ? 1 : 0;
-
-        $max_mb = isset( $_POST['pdf_max_filesize_mb'] ) ? (int) $_POST['pdf_max_filesize_mb'] : 20;
-        if ( $max_mb < 1 ) {
-            $max_mb = 1;
-        }
-        if ( $max_mb > 100 ) {
-            $max_mb = 100;
-        }
-        $settings['pdf_max_filesize_mb'] = $max_mb;
-
-        update_option( 'mbr_isa_settings', $settings );
-
-        wp_safe_redirect( admin_url( 'admin.php?page=mbr-isa-diagnostic&content-saved=1#mbr-isa-content-settings' ) );
         exit;
     }
 
@@ -492,21 +422,12 @@ class MBR_ISA {
             </table>
 
             <?php if ( $reindex_msg ) : ?>
-                <?php $reindex_failed = (int) ( $reindex_msg['failed'] ?? 0 ); ?>
-                <div class="notice notice-<?php echo $reindex_failed ? 'error' : 'success'; ?>" style="margin-top:1em;"><p>
+                <div class="notice notice-success" style="margin-top:1em;"><p>
                     <?php echo esc_html( sprintf(
-                        __( 'Reindex complete: %1$d documents as %2$d chunks in %3$s seconds.', 'mbr-isa' ),
+                        __( 'Reindex complete: %1$d documents in %2$s seconds.', 'mbr-isa' ),
                         (int) ( $reindex_msg['documents'] ?? 0 ),
-                        (int) ( $reindex_msg['chunks'] ?? 0 ),
                         (string) ( $reindex_msg['duration'] ?? '?' )
                     ) ); ?>
-                    <?php if ( $reindex_failed ) : ?>
-                        <br><strong><?php echo esc_html( sprintf(
-                            __( '%1$d of %2$d items could not be written to the index. This usually means the database schema is out of date — check the DB Version above, and deactivate and reactivate the plugin to re-run the upgrade.', 'mbr-isa' ),
-                            $reindex_failed,
-                            (int) ( $reindex_msg['attempted'] ?? 0 )
-                        ) ); ?></strong>
-                    <?php endif; ?>
                 </p></div>
             <?php endif; ?>
 
@@ -518,129 +439,8 @@ class MBR_ISA {
                     <span class="mbr-isa-btn-spinner" aria-hidden="true"></span>
                 </button>
                 <span style="color:#666;margin-left:1em;" id="mbr-isa-reindex-status">
-                    <?php esc_html_e( 'Indexes all published content of the post types selected below (and PDFs, if enabled).', 'mbr-isa' ); ?>
+                    <?php esc_html_e( 'Indexes all published posts and pages.', 'mbr-isa' ); ?>
                 </span>
-            </form>
-
-            <?php
-            // --- Content sources section --------------------------------
-            $content_settings   = get_option( 'mbr_isa_settings', [] );
-            $pdf_enabled         = ! empty( $content_settings['index_pdfs'] );
-            $pdf_max_mb          = isset( $content_settings['pdf_max_filesize_mb'] ) ? (int) $content_settings['pdf_max_filesize_mb'] : 20;
-            $content_saved       = isset( $_GET['content-saved'] ) && '1' === $_GET['content-saved'];
-
-            // Currently enabled post types (falling back to the shipped default).
-            $enabled_types = $content_settings['enabled_post_types'] ?? [ 'post', 'page' ];
-            if ( ! is_array( $enabled_types ) ) {
-                $enabled_types = [ 'post', 'page' ];
-            }
-            $enabled_types = array_map( 'strval', $enabled_types );
-
-            /*
-             * Offer only publicly-viewable post types. Non-public types are
-             * excluded by design: their entries would have no reachable
-             * permalink, and indexing them would expose internal records
-             * through a public REST endpoint that performs no capability
-             * check at query time.
-             *
-             * 'attachment' is excluded here because PDFs have their own
-             * dedicated toggle below.
-             */
-            $available_types = get_post_types( [ 'public' => true ], 'objects' );
-            unset( $available_types['attachment'] );
-
-            // Any enabled type that is no longer registered (e.g. its plugin is
-            // deactivated). Surfaced explicitly so saving cannot silently drop it.
-            $orphaned_types = array_values( array_diff(
-                $enabled_types,
-                array_keys( $available_types )
-            ) );
-            ?>
-
-            <h2 id="mbr-isa-content-settings" style="margin-top:2em;"><?php esc_html_e( 'Content Sources', 'mbr-isa' ); ?></h2>
-            <p><?php esc_html_e( 'Choose which content the assistant indexes.', 'mbr-isa' ); ?></p>
-
-            <?php if ( $content_saved ) : ?>
-                <div class="notice notice-success" style="margin-top:1em;"><p>
-                    <?php esc_html_e( 'Content settings saved. Run a full reindex to apply the change to existing files.', 'mbr-isa' ); ?>
-                </p></div>
-            <?php endif; ?>
-
-            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="max-width:700px;">
-                <?php wp_nonce_field( 'mbr_isa_save_content_settings' ); ?>
-                <input type="hidden" name="action" value="mbr_isa_save_content_settings">
-
-                <table class="form-table" role="presentation">
-                    <tbody>
-                        <tr>
-                            <th scope="row"><?php esc_html_e( 'Post types', 'mbr-isa' ); ?></th>
-                            <td>
-                                <fieldset>
-                                    <legend class="screen-reader-text"><?php esc_html_e( 'Post types to index', 'mbr-isa' ); ?></legend>
-                                    <?php foreach ( $available_types as $type_slug => $type_obj ) : ?>
-                                        <?php
-                                        $type_label = isset( $type_obj->labels->name ) && $type_obj->labels->name
-                                            ? $type_obj->labels->name
-                                            : $type_slug;
-                                        ?>
-                                        <label style="display:block;margin-bottom:4px;">
-                                            <input type="checkbox" name="enabled_post_types[]" value="<?php echo esc_attr( $type_slug ); ?>" <?php checked( in_array( $type_slug, $enabled_types, true ) ); ?>>
-                                            <?php echo esc_html( $type_label ); ?>
-                                            <code style="margin-left:4px;"><?php echo esc_html( $type_slug ); ?></code>
-                                        </label>
-                                    <?php endforeach; ?>
-
-                                    <?php if ( ! empty( $orphaned_types ) ) : ?>
-                                        <hr style="margin:10px 0;">
-                                        <p class="description" style="margin-bottom:4px;">
-                                            <strong><?php esc_html_e( 'Enabled but not currently registered:', 'mbr-isa' ); ?></strong>
-                                            <?php esc_html_e( 'these were set previously but no post type of that name exists right now — most often because the plugin or theme that registered it is inactive. Untick to remove.', 'mbr-isa' ); ?>
-                                        </p>
-                                        <?php foreach ( $orphaned_types as $orphan ) : ?>
-                                            <label style="display:block;margin-bottom:4px;">
-                                                <input type="checkbox" name="enabled_post_types[]" value="<?php echo esc_attr( $orphan ); ?>" checked>
-                                                <code><?php echo esc_html( $orphan ); ?></code>
-                                                <span class="description"><?php esc_html_e( '(not registered)', 'mbr-isa' ); ?></span>
-                                            </label>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </fieldset>
-                                <p class="description">
-                                    <?php esc_html_e( 'Which post types the assistant indexes. Only published content is indexed. Custom post types appear here automatically once registered.', 'mbr-isa' ); ?>
-                                </p>
-                                <p class="description">
-                                    <?php esc_html_e( 'Only publicly-viewable post types are listed. Results are returned through a public endpoint, so private or internal post types are deliberately not offered.', 'mbr-isa' ); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><?php esc_html_e( 'PDF files', 'mbr-isa' ); ?></th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="index_pdfs" value="1" <?php checked( $pdf_enabled ); ?>>
-                                    <?php esc_html_e( 'Index PDF files from the Media Library.', 'mbr-isa' ); ?>
-                                </label>
-                                <p class="description">
-                                    <?php esc_html_e( 'Extracts the text layer from each PDF. Scanned/image-only PDFs with no text layer are skipped automatically. Results link straight to the file.', 'mbr-isa' ); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><label for="mbr-isa-pdf-max"><?php esc_html_e( 'Maximum PDF size', 'mbr-isa' ); ?></label></th>
-                            <td>
-                                <input type="number" id="mbr-isa-pdf-max" name="pdf_max_filesize_mb" value="<?php echo esc_attr( (string) $pdf_max_mb ); ?>" min="1" max="100" step="1" class="small-text">
-                                <?php esc_html_e( 'MB', 'mbr-isa' ); ?>
-                                <p class="description">
-                                    <?php esc_html_e( 'PDFs larger than this are skipped to protect memory on shared hosting. Range 1–100.', 'mbr-isa' ); ?>
-                                </p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <p class="submit" style="margin:0;">
-                    <button type="submit" class="button button-secondary"><?php esc_html_e( 'Save content settings', 'mbr-isa' ); ?></button>
-                </p>
             </form>
 
             <?php

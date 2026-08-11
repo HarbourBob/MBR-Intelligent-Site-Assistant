@@ -21,11 +21,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class MBR_ISA_Tokeniser {
 
     /**
-     * Sentinel marking a block-element boundary in extracted text.
-     */
-    const BLOCK_MARKER = "\xc2\xb6";
-
-    /**
      * Minimum token length after cleaning. Single letters rarely useful.
      */
     const MIN_TOKEN_LENGTH = 2;
@@ -83,79 +78,25 @@ class MBR_ISA_Tokeniser {
     }
 
     /**
-     * Remove markup but keep human-readable punctuation.
-     *
-     * Shared by clean() and by the indexer, which must convert content to
-     * plain text *before* it is split into passage chunks. Chunking raw
-     * HTML is unsafe: a chunk boundary can fall inside a tag, leaving the
-     * next chunk starting mid-attribute with no opening angle bracket for
-     * strip_tags() to recognise — at which point SVG icon attributes and
-     * similar markup leak into both the snippet and the index.
-     *
-     * @param string $text Raw content, possibly containing HTML.
-     * @return string Plain text with punctuation intact.
-     */
-    public function strip_markup( $text ) {
-        $text = (string) $text;
-
-        // Remove shortcodes first — before strip_tags so their contents don't leak.
-        if ( function_exists( 'strip_shortcodes' ) ) {
-            $text = strip_shortcodes( $text );
-        }
-
-        // Remove script/style tags and their contents entirely.
-        $text = preg_replace( '#<(script|style)[^>]*>.*?</\1>#is', ' ', (string) $text );
-
-        // Drop HTML comments, which can carry block-editor JSON.
-        $text = preg_replace( '/<!--.*?-->/s', ' ', (string) $text );
-
-        // Mark block-level boundaries before stripping tags. Two reasons:
-        // strip_tags() alone turns "<p>one</p><p>two</p>" into "onetwo",
-        // fabricating a word that appears nowhere on the page; and deep
-        // links need to know where blocks end, because a browser will not
-        // match a text fragment that spans a block boundary.
-        //
-        // The marker is a pilcrow, which survives chunking as an ordinary
-        // word, is stripped by clean() before tokenising (so it is never
-        // indexed), and is removed again before any snippet is displayed.
-        $text = preg_replace(
-            '#</?(?:p|div|section|article|header|footer|aside|main|nav|h[1-6]|li|ul|ol|dl|dt|dd|tr|td|th|table|thead|tbody|blockquote|pre|figure|figcaption|br|hr)\b[^>]*>#i',
-            ' ' . self::BLOCK_MARKER . ' ',
-            (string) $text
-        );
-
-        // Strip remaining HTML.
-        $text = wp_strip_all_tags( (string) $text );
-
-        // An unterminated tag would otherwise survive as attribute text.
-        // Nothing legitimate in prose looks like an unclosed tag.
-        $text = preg_replace( '/<[^>]*$/s', ' ', (string) $text );
-
-        // Decode HTML entities so &amp; becomes &, etc.
-        $text = html_entity_decode( (string) $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-
-        // Collapse whitespace.
-        $text = preg_replace( '/\s+/u', ' ', (string) $text );
-
-        // Collapse runs of block markers (</p><p> produces two) and trim
-        // them from the ends, where they carry no information.
-        $text = preg_replace(
-            '/(?:' . self::BLOCK_MARKER . '\s*)+/u',
-            self::BLOCK_MARKER . ' ',
-            (string) $text
-        );
-
-        return trim( (string) $text, " \t\n\r\0\x0B" . self::BLOCK_MARKER );
-    }
-
-    /**
      * Clean raw text: strip HTML, shortcodes, URLs, normalise whitespace.
      *
      * @param string $text Input.
      * @return string Cleaned text.
      */
     public function clean( $text ) {
-        $text = $this->strip_markup( $text );
+        // Remove shortcodes first — before strip_tags so their contents don't leak.
+        if ( function_exists( 'strip_shortcodes' ) ) {
+            $text = strip_shortcodes( $text );
+        }
+
+        // Remove script/style tags and their contents entirely.
+        $text = preg_replace( '#<(script|style)[^>]*>.*?</\1>#is', ' ', $text );
+
+        // Strip remaining HTML.
+        $text = wp_strip_all_tags( $text );
+
+        // Decode HTML entities so &amp; becomes &, etc.
+        $text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
         // Remove URLs.
         $text = preg_replace( '#https?://\S+#i', ' ', $text );
