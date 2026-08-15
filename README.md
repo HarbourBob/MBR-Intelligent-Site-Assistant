@@ -43,7 +43,7 @@ third party sitting between your visitors and their answers.
 
 ## What it is not
 
-Despite the word *assistant*, this is **not a large language model and it does
+Despite the word *intelligent*, this is **not a large language model, and it does
 not generate text**. It retrieves content you have already written, and answers
 a configurable list of canned questions. Ask it something you have not written
 about and it will say so politely rather than inventing an answer.
