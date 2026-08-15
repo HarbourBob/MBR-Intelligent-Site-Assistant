@@ -12,18 +12,9 @@ No external APIs. No monthly fees. Nothing leaves your server on the visitor pat
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-3fb950)](LICENSE)
 [![Free](https://img.shields.io/badge/price-free%20forever-3fb950)](https://littlewebshack.com)
 
-[Download](https://littlewebshack.com) · [User guide (PDF)](#documentation) · [How it works](#how-it-works) · [Configuration](#configuration)
-
+[Download](https://littlewebshack.com/mbr-intelligent-site-assistant) · [User guide (PDF)](#documentation) · [How it works](#how-it-works) · [Configuration](#configuration)
 </div>
 
-<!--
-  Landing pages want a hero image. Drop a screenshot of the widget at
-  assets/screenshot-widget.png and uncomment:
-
-  <div align="center">
-    <img src="assets/screenshot-widget.jpg" alt="MBR Intelligent Site Assistant" width="720">
-  </div>
--->
   <div align="center">
     <img src="assets/screenshot-widget.jpg" alt="MBR Intelligent Site Assistant" width="720">
   </div>
