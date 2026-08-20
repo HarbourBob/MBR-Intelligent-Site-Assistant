@@ -6,7 +6,7 @@
 
 No external APIs. No monthly fees. Nothing leaves your server on the visitor path.
 
-[![Version](https://img.shields.io/badge/version-0.9.8-7c3fbf)](https://littlewebshack.com)
+[![Version](https://img.shields.io/badge/version-0.9.10-7c3fbf)](https://littlewebshack.com)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)](https://www.php.net)
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-3fb950)](LICENSE)
@@ -25,7 +25,7 @@ No external APIs. No monthly fees. Nothing leaves your server on the visitor pat
 
 Visitors type a question in plain English. The assistant answers with short
 messages and links to the most relevant pages on your site — including the text
-inside your PDFs.
+inside your PDFs, and the images you have described.
 
 All of it runs on your own server. Ranking is pure PHP and MySQL using BM25,
 layered with intent matching for common questions and synonym expansion for
@@ -52,6 +52,8 @@ hallucination risk, and no outbound request carrying your visitors' questions.
 | **BM25 ranking** | Field-weighted (title 3.0, excerpt 1.5, body 1.0), each field length-normalised against its own average rather than the whole document. |
 | **Passage chunking** | Long documents split into ~250-word overlapping chunks, each scored as its own unit, so a relevant paragraph deep inside a 30-page PDF competes on its own merits. |
 | **PDF indexing** | Pure-PHP text extraction — FlateDecode, ASCII85, ASCIIHex — with no external binaries. Results deep-link to the page *and* the passage. |
+| **Image indexing** | Optional. Images are indexed on their alt text, caption, description and filename — everything a person wrote about the picture. Nothing is read from the image itself; there is no vision model and no outbound call. Results carry a thumbnail, an `IMAGE` badge, and a lightbox. |
+| **Alt text audit** | Finds images with no alt text and ranks them by how many published pages actually display each one, with inline editing. It does not generate the text — see [On not generating alt text](#on-not-generating-alt-text). |
 | **Exact phrase search** | Quote a query to demand a literal run of words. Bypasses intents and synonyms, which is the point. |
 | **Intent matching** | Pair trigger phrases with hand-written answers for questions your content does not cover. Search results are still offered beneath, where they are good enough. |
 | **Synonyms and stemming** | Porter stemming plus editable synonym groups, so "WP" finds "WordPress" and "building" matches "build". |
@@ -108,7 +110,7 @@ query
 Four custom tables carry it, all prefixed with your WordPress table prefix:
 `mbrisa_terms` (dictionary and document frequencies), `mbrisa_documents` (one
 row per passage chunk), `mbrisa_postings` (the inverted index) and
-`mbrisa_queries` (the query log).
+`mbrisa_queries` (the query log). Schema version 6.
 
 ### On visibility
 
@@ -129,6 +131,31 @@ therefore reachable by anyone. The plugin treats that as the constraint it is:
 
 ---
 
+## On not generating alt text
+
+The alt text audit finds and ranks images that need describing. It does not
+write the descriptions, and that is a design decision rather than a missing
+feature.
+
+This plugin cannot see images. Nothing in it looks at a single pixel. Anything
+it generated would be inferred from the filename, the caption, or the
+surrounding page — which is not a description of the picture, and wrong alt
+text is worse than none. A screen reader announcing "hero banner 3" gives a
+listener noise where silence would have been kinder, and a genuinely decorative
+image is *supposed* to carry an empty alt attribute. Only somebody looking at
+the image can tell the two apart.
+
+So the panel does the part a machine is good at — finding the images, working
+out which ones are actually on published pages, and putting the filename,
+caption and context in front of you — and leaves the sentence to a person.
+On a typical site the top twenty rows are most of the value.
+
+Generating real descriptions would need a vision model, which means an external
+API, a key, per-image cost, and your clients' images leaving the server. That is
+a legitimate product; it is not this one.
+
+---
+
 ## Configuration
 
 ### Filters
@@ -139,6 +166,11 @@ therefore reachable by anyone. The plugin treats that as the constraint it is:
 | `mbr_isa_pdf_scan_postmeta` | Return `false` to skip the post-meta pass when deciding whether a PDF is referenced. |
 | `mbr_isa_pdf_reference_candidates` | How many candidate referencing posts are tested. Default 25, clamped to 1–500. |
 | `mbr_isa_stopwords` | Filter the English stopword list before tokenisation. Requires a reindex. |
+| `mbr_isa_image_result_url` | Where an image result links to. Defaults to the page the image appears on. |
+| `mbr_isa_image_score_weight` | Score multiplier for image results. Default 1.0 — no adjustment. |
+| `mbr_isa_image_length_floor` | The BM25 length floor applied to image rows. Return 0 to disable. |
+| `mbr_isa_indexable_image_mimes` | Which image MIME types are indexed. SVG is excluded by default. |
+| `mbr_isa_builder_meta_keys` | Post-meta keys the alt text audit reads for page-builder layouts. |
 | `mbr_isa_trust_proxy` | Let the rate limiter and query log read forwarded-for headers. |
 
 ```php
@@ -223,6 +255,8 @@ compatible — a manifest with no `checksum` key updates exactly as before.
 - Standard MySQL or MariaDB — no special extensions for core search
 - PDF indexing uses `zlib` and `mbstring`, which ship with virtually every PHP
   install
+- Image indexing needs nothing beyond WordPress itself — it reads text you have
+  already written, not the image
 - No external services, API keys, or outbound network access to run
 
 ---
@@ -258,7 +292,23 @@ a licence.
 
 ## Changelog
 
-Full history is in `readme.txt` and in chapter 2 of the user guide. Most recent:
+Full history is in `readme.txt`, `CHANGELOG.md`, and chapter 2 of the user
+guide. Most recent:
+
+**0.9.10** — Adds the Alt Text Audit: a ranked, editable worklist of images
+missing alt text, sorted by how many published pages display each one. Reads
+page-builder layouts as well as post content, since Elementor and Bricks keep
+theirs in post meta. No schema change and no reindex.
+
+**0.9.9** — Image indexing, off by default, plus the resolution of an external
+security and code audit of 0.9.8 (nine medium, nineteen low; no critical or
+high). Images are indexed on alt text, caption, description and filename, with
+thumbnails, an `IMAGE` badge and a lightbox in the widget. Schema v6, applied
+automatically; a reindex is needed before images appear. Audit fixes include a
+timezone fault that rejected every feedback rating west of Greenwich, an
+undefined variable that could corrupt the JSON response and disclose the server
+path, an unbounded recursion on a cyclic PDF page tree, and the missing
+translation template that left every string inert.
 
 **0.9.8** — Follow-up to the 0.9.7 code review. The PDF reference scan now
 applies the same visibility decision as everything else, closing a gap where a
