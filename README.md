@@ -6,13 +6,13 @@
 
 No external APIs. No monthly fees. Nothing leaves your server on the visitor path.
 
-[![Version](https://img.shields.io/badge/version-0.9.10-7c3fbf)](https://littlewebshack.com)
+[![Version](https://img.shields.io/badge/version-0.9.17-7c3fbf)](https://littlewebshack.com)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)](https://www.php.net)
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-3fb950)](LICENSE)
 [![Free](https://img.shields.io/badge/price-free%20forever-3fb950)](https://littlewebshack.com)
 
-[Download](https://littlewebshack.com/mbr-intelligent-site-assistant) · [User guide (PDF)](mbr-intelligent-site-assistant-user-guide.pdf) · [How it works](#how-it-works) · [Configuration](#configuration)
+[Download](https://littlewebshack.com/mbr-intelligent-site-assistant) · [User guide (PDF)](mbr-intelligent-site-assistant-user-guide-v0_9_17.pdf) · [How it works](#how-it-works) · [Configuration](#configuration)
 </div>
 
   <div align="center">
@@ -120,8 +120,11 @@ therefore reachable by anyone. The plugin treats that as the constraint it is:
 
 - Only published, non-password-protected posts of front-end-viewable types are
   indexed.
-- A PDF is indexed only when something published and publicly readable points
-  at it.
+- A PDF or image is indexed only when something published and publicly
+  readable points at it. Four passes answer that, cheapest first: the
+  attachment relationship, `_thumbnail_id` for featured images, a path in post
+  content or post meta, and a filename stem verified in PHP. JSON escaping is
+  undone first, so page-builder layouts are seen.
 - Every result is re-tested against the live post before it leaves the server,
   so a page that has since become private, protected or restricted is discarded
   rather than served.
@@ -164,7 +167,7 @@ a legitimate product; it is not this one.
 |---|---|
 | `mbr_isa_can_index_post` | Veto a post an access-control plugin knows is restricted. Deny-only. |
 | `mbr_isa_pdf_scan_postmeta` | Return `false` to skip the post-meta pass when deciding whether a PDF is referenced. |
-| `mbr_isa_pdf_reference_candidates` | How many candidate referencing posts are tested. Default 25, clamped to 1–500. |
+| `mbr_isa_pdf_reference_candidates` | How many candidate referencing posts are tested. Default 25, clamped to 1–500. Despite the name, it governs images too — the reference scan is shared. |
 | `mbr_isa_stopwords` | Filter the English stopword list before tokenisation. Requires a reindex. |
 | `mbr_isa_image_result_url` | Where an image result links to. Defaults to the page the image appears on. |
 | `mbr_isa_image_score_weight` | Score multiplier for image results. Default 1.0 — no adjustment. |
@@ -263,7 +266,8 @@ compatible — a manifest with no `checksum` key updates exactly as before.
 
 ## Documentation
 
-A comprehensive user guide is bundled as a PDF inside the ZIP — installation,
+A comprehensive user guide is bundled as a PDF inside the ZIP, at the plugin
+root as `mbr-intelligent-site-assistant-user-guide-v0_9_17.pdf` — installation,
 first-run setup, the diagnostic dashboard, indexing behaviour, the REST API,
 privacy, troubleshooting, and a full technical reference of every setting,
 filter and table.
@@ -295,6 +299,56 @@ a licence.
 Full history is in `readme.txt`, `CHANGELOG.md`, and chapter 2 of the user
 guide. Most recent:
 
+**0.9.17** — Page-builder layouts were invisible to the reference scan. JSON
+escapes forward slashes, so a stored path such as `2025/12/photo.png` sits in
+post meta as `2025\/12\/photo.png` and could never match — affecting every
+attachment on every Elementor- or Bricks-built site, PDFs as well as images.
+Elementor's thumbnail cache hid them a second way, serving from a path holding
+only the filename stem and a hash. A last-resort stem pass now proves its match
+in PHP rather than trusting a substring, so a separate upload named
+`logo-2.png` is not read as a reference to `logo.png`. **Full reindex
+required.**
+
+**0.9.16** — A featured image was invisible to the visibility scan. It is
+recorded as `_thumbnail_id` holding an attachment ID rather than as a path, so
+nothing looking for a path could ever find it, and such an image qualified only
+if its `post_parent` happened to be readable. Featured images are now checked
+first — an exact match on an indexed meta key, cheaper than the scans it
+precedes. Expect the indexed image count to rise. **Full reindex required.**
+
+**0.9.15** — An image result could link to a page the image does not appear on.
+The URL preferred the attachment's `post_parent`, which records which editor a
+file was uploaded from rather than which page displays it, so an image used on
+a blog post could send the visitor to the About page. Results now prefer a post
+that actually references the file, sorted deterministically. **Full reindex
+required** — the URL is resolved at index time and stored on the row.
+
+**0.9.14** — Regression from 0.9.13. The bounded tag remover replaced inline
+tags with a space where `strip_tags()` had replaced them with nothing, so
+`Uses <strong>WordPress</strong>&#8217;s own` was indexed as `Uses WordPress ’s
+own` — a space that exists on no rendered page. Text Fragments requires an exact match, so deep links
+loaded the page and silently declined to scroll; quoted phrase search and
+snippet accuracy suffered the same way. **Full reindex required.**
+
+**0.9.13** — One malformed tag could cost a page its entire body. `strip_tags()`
+has no upper bound on how far it hunts for a closing bracket, so a single
+unterminated construct in the head consumed everything after it — on one real
+page, 36,965 characters reached the index as 47: the `<title>`, and nothing
+else. The page rendered perfectly and counted as indexed while returning
+nothing for any word in its body. Tag removal is now bounded, and a full HTML
+document in `post_content` is indexed on its `<body>` alone. **Full reindex
+required.**
+
+**0.9.12** — Fixes HTML entities never being decoded during indexing. A heading
+reading "Rules & Targeting" was stored as `Rules &amp; Targeting`, so quoted
+phrase search could never match it; `&amp;` was also being tokenised as the
+searchable term "amp". Present since the tokeniser landed. **Full reindex
+required.**
+
+**0.9.11** — `wp mbr-isa status` now reports image indexing, with the count of
+images actually in the index. The 0.9.10 guide documented the line; the command
+never printed it. No schema change, no reindex.
+
 **0.9.10** — Adds the Alt Text Audit: a ranked, editable worklist of images
 missing alt text, sorted by how many published pages display each one. Reads
 page-builder layouts as well as post content, since Elementor and Bricks keep
@@ -309,19 +363,6 @@ timezone fault that rejected every feedback rating west of Greenwich, an
 undefined variable that could corrupt the JSON response and disclose the server
 path, an unbounded recursion on a cyclic PDF page tree, and the missing
 translation template that left every string inert.
-
-**0.9.8** — Follow-up to the 0.9.7 code review. The PDF reference scan now
-applies the same visibility decision as everything else, closing a gap where a
-members-only page could still count as evidence that a PDF it links to was
-published. Also fixes a long-standing cosmetic fault where a host theme's form
-margin opened a stripe of background under the chat input. No schema change and
-no reindex needed.
-
-**0.9.7** — Security and scalability release prompted by an external code
-review. Search-time revalidation of every result, the `mbr_isa_can_index_post`
-filter, checksum-verified update packages, corpus statistics cached instead of
-recalculated per query, one feedback rating per answer, and corrected
-contents-page detection.
 
 ---
 
