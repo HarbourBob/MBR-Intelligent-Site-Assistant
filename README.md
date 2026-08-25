@@ -6,7 +6,7 @@
 
 No external APIs. No monthly fees. Nothing leaves your server on the visitor path.
 
-[![Version](https://img.shields.io/badge/version-0.9.17-7c3fbf)](https://littlewebshack.com)
+[![Version](https://img.shields.io/badge/version-0.9.18-7c3fbf)](https://littlewebshack.com)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)](https://www.php.net)
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-3fb950)](LICENSE)
@@ -298,6 +298,21 @@ a licence.
 
 Full history is in `readme.txt`, `CHANGELOG.md`, and chapter 2 of the user
 guide. Most recent:
+
+**0.9.18** — Three fixes. The body-only rule added in 0.9.13 ran on every field
+rather than only on full HTML documents, so content that merely *mentioned*
+`<body>` was truncated at that point. A post whose mention fell after its prose
+indexed as nothing at all; this plugin's own user guide — which documents that
+rule — lost its first five pages and had the survivors renumbered from 1,
+sending every PDF deep link to the wrong page. The rule now requires
+corroboration: a doctype or an `<html>` tag near the start, which a genuine
+document always carries and a passing mention never does. Also: the Alt Text
+Audit's Decorative button records its decision in a marker of its own rather
+than in empty alt text, which the scan could not tell apart from an undescribed
+image, so a marked image now stays out of the worklist and can be listed again
+to undo; and meta holding a bare comma-separated list of attachment IDs —
+WooCommerce product galleries among them — is now read for usage counts.
+**Full reindex required.**
 
 **0.9.17** — Page-builder layouts were invisible to the reference scan. JSON
 escapes forward slashes, so a stored path such as `2025/12/photo.png` sits in
