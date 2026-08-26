@@ -12,7 +12,7 @@ No external APIs. No monthly fees. Nothing leaves your server on the visitor pat
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-3fb950)](LICENSE)
 [![Free](https://img.shields.io/badge/price-free%20forever-3fb950)](https://littlewebshack.com)
 
-[Download](https://littlewebshack.com/mbr-intelligent-site-assistant) · [User guide (PDF)](mbr-intelligent-site-assistant-user-guide-v0_9_18.pdf) · [How it works](#how-it-works) · [Configuration](#configuration)
+[Download](https://littlewebshack.com/mbr-intelligent-site-assistant) · [User guide (PDF)](mbr-intelligent-site-assistant-user-guide-v0.9.18.pdf) · [How it works](#how-it-works) · [Configuration](#configuration)
 </div>
 
   <div align="center">
