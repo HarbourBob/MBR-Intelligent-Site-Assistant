@@ -16,7 +16,7 @@ No external APIs. No monthly fees. Nothing leaves your server on the visitor pat
 </div>
 
   <div align="center">
-    <img src="assets/screenshot-widget.jpg" alt="MBR Intelligent Site Assistant" width="720">
+    <img src="assets/ISA - Promo.png" alt="MBR Intelligent Site Assistant" width="720">
   </div>
 
 ---
