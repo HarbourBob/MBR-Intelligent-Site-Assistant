@@ -6,17 +6,17 @@
 
 No external APIs. No monthly fees. Nothing leaves your server on the visitor path.
 
-[![Version](https://img.shields.io/badge/version-0.9.18-7c3fbf)](https://littlewebshack.com)
+[![Version](https://img.shields.io/badge/version-0.9.21-7c3fbf)](https://littlewebshack.com)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4)](https://www.php.net)
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-3fb950)](LICENSE)
 [![Free](https://img.shields.io/badge/price-free%20forever-3fb950)](https://littlewebshack.com)
 
-[Download](https://littlewebshack.com/mbr-intelligent-site-assistant) · [User guide (PDF)](mbr-intelligent-site-assistant-user-guide-v0.9.18.pdf) · [How it works](#how-it-works) · [Configuration](#configuration)
+[Download](https://littlewebshack.com/mbr-intelligent-site-assistant) · [User guide (PDF)](mbr-intelligent-site-assistant-user-guide-v0_9_21.pdf) · [How it works](#how-it-works) · [Configuration](#configuration)
 </div>
 
   <div align="center">
-    <img src="assets/ISA - Promo.png" alt="MBR Intelligent Site Assistant" width="920">
+    <img src="assets/screenshot-widget.jpg" alt="MBR Intelligent Site Assistant" width="720">
   </div>
 
 ---
@@ -255,9 +255,11 @@ compatible — a manifest with no `checksum` key updates exactly as before.
 
 - WordPress 5.8 or later (tested to 7.0)
 - PHP 7.4 or later
-- Standard MySQL or MariaDB — no special extensions for core search
-- PDF indexing uses `zlib` and `mbstring`, which ship with virtually every PHP
-  install
+- Standard MySQL or MariaDB
+- The `mbstring` extension, which ships with virtually every PHP install. From
+  0.9.19 this is checked at load and stated in an admin notice if missing,
+  rather than half-guarded in a way that could not actually degrade gracefully
+- PDF indexing additionally uses `zlib`
 - Image indexing needs nothing beyond WordPress itself — it reads text you have
   already written, not the image
 - No external services, API keys, or outbound network access to run
@@ -267,7 +269,7 @@ compatible — a manifest with no `checksum` key updates exactly as before.
 ## Documentation
 
 A comprehensive user guide is bundled as a PDF inside the ZIP, at the plugin
-root as `mbr-intelligent-site-assistant-user-guide-v0_9_17.pdf` — installation,
+root as `mbr-intelligent-site-assistant-user-guide-v0_9_21.pdf` — installation,
 first-run setup, the diagnostic dashboard, indexing behaviour, the REST API,
 privacy, troubleshooting, and a full technical reference of every setting,
 filter and table.
@@ -299,7 +301,66 @@ a licence.
 Full history is in `readme.txt`, `CHANGELOG.md`, and chapter 2 of the user
 guide. Most recent:
 
-**0.9.18** — Three fixes. The body-only rule added in 0.9.13 ran on every field
+**0.9.21** — Ten low-severity findings from an external re-test of 0.9.20,
+plus an integrity fix from a second audit; no reindex and no schema change.
+The widget also opens a multi-result answer at its first result rather than
+its last: scrolling to the bottom of the log is right for a short reply and
+wrong for one taller than the panel. Feedback recording was not atomic: the endpoint read the `feedback` column,
+checked it was NULL and then wrote it, so two submissions arriving together
+could both pass the check and the second overwrite the first. The write now
+carries `AND feedback IS NULL` and the database settles it. The largest was a documentation one: 0.9.20 said
+in five places that the inline admin CSS and JavaScript had been extracted,
+while four blocks totalling 417 lines remained on the intents, synonyms and
+Appearance screens — so anyone who read the changelog and set a strict admin
+Content-Security-Policy would have found the Appearance preview dead. The
+extraction is now genuinely complete, the Appearance script included. Also: the
+translation template, which had not been regenerated since 0.9.10 and was
+leaving five of the seven new tab labels untranslatable; the Status tab's
+reindex hint, which pointed at checkboxes the tab split had moved; a redundant
+second whitespace pass in the PDF extractor; four dead `global $wpdb;`
+declarations; and a stylesheet rule that matched nothing, now made true by
+giving the synonyms screen the same anchored saves the intents screen has.
+
+**0.9.20** — An admin usability release; no reindex required and no schema
+change. The Diagnostics screen is now seven tabs (Status, Content, Alt Text,
+Privacy, Widget, Feedback, Testers) rather than one long scroll, and each tab
+renders on its own so only the active tab's queries run. Adding an intent
+returns you to the add form instead of the top of the page, so several can be
+added in a row without scrolling back each time. Admin CSS and JavaScript moved
+out of inline `<style>` and `<script>` blocks into real asset files — the
+outstanding finding from the 0.9.18 re-test.
+
+**0.9.19** — Six low-severity fixes from an external re-test of 0.9.18, all in
+code added between 0.9.9 and 0.9.18. **No reindex required**, and no schema
+change. A PDF whose extracted text was invalid UTF-8 still lost all of it: the
+fallback for a failed unicode pass ran against a variable the failure had
+already emptied, so the document was reported as having no text layer — the
+same defect corrected elsewhere in the same function in 0.9.9, with one
+instance missed. `strip_markup()` decoded HTML entities twice, so
+double-encoded content came back as markup-shaped text in the stored passage
+(never exploitable — snippets are escaped before highlighting). 
+`intent_supplementary_max` could never return more than one result, because the
+supplementary path inherited the high-confidence cap of 1 from the formatting
+path it reuses. The contents-page demotion fetched every contents row in the
+index rather than only those the query matched. **Also:** `mbstring` is now
+declared as a requirement with a runtime check instead of six scattered
+`function_exists()` guards that promised a graceful degradation the rest of the
+code could not deliver, and results no longer carry the full 2,000-character
+stored passage to the visitor alongside the 240-character snippet the widget
+actually renders.
+
+**0.9.18** — Three fixes and two additions. **New:** a document still gets one
+result, but further passages matching the query now appear beneath it as
+secondary links, each with its own snippet and deep link, and its page number
+on a PDF — so a name mentioned three times in one report is reachable at all
+three rather than only the best-scoring one. Capped at three per result;
+`passage_extras_max` 0 restores the old behaviour. **Also:** high confidence
+returns a single result, and its dominance test could be satisfied while the
+runner-up was still a good answer — so searching a name showed the image that
+matched it and hid every document discussing the person. A runner-up at or
+above the medium threshold now rules out high confidence, and the caps are
+settable through `result_limit_high`, `result_limit_medium` and
+`result_limit_low`. The body-only rule added in 0.9.13 ran on every field
 rather than only on full HTML documents, so content that merely *mentioned*
 `<body>` was truncated at that point. A post whose mention fell after its prose
 indexed as nothing at all; this plugin's own user guide — which documents that
@@ -378,6 +439,41 @@ timezone fault that rejected every feedback rating west of Greenwich, an
 undefined variable that could corrupt the JSON response and disclose the server
 path, an unbounded recursion on a cyclic PDF page tree, and the missing
 translation template that left every string inert.
+
+---
+
+## Bundled dependencies
+
+One third-party library ships with the plugin.
+
+| Library | Version | Source | Licence |
+| --- | --- | --- | --- |
+| Plugin Update Checker | 5.7 (`load-v5p7.php`) | [YahnisElsts/plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker/) | MIT |
+
+It powers the self-hosted update flow described above: nothing else in the
+plugin depends on it, and in generic-JSON-manifest mode the bundled
+`Puc/*/Vcs/` tree and Parsedown are never reached.
+
+**Update procedure.** Download the current release from the upstream
+repository, replace the `plugin-update-checker/` directory wholesale, check the
+`load-v5pN.php` filename against the `require` in
+`mbr-intelligent-site-assistant.php`, and update the version in the table
+above. A bundled library that is never revisited is an easy thing to overlook,
+so the version is recorded here rather than left to be inferred from a
+filename.
+
+---
+
+## Credits
+
+Built and maintained by [Robert Palmer](https://madebyrobert.co.uk).
+
+**James Wilson** (Director of Technology, [Cogora](https://cogora.com)) has
+contributed code to the passage chunker
+(`includes/class-mbr-isa-chunker.php`) and the WP-CLI commands
+(`includes/class-mbr-isa-cli.php`), and carried out the external security and
+code audit of 0.9.8 and the re-test of 0.9.18 that this release answers. Both
+files carry the acknowledgement in their header comments.
 
 ---
 
