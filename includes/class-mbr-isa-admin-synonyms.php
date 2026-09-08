@@ -34,6 +34,13 @@ class MBR_ISA_Admin_Synonyms {
     const ACTION_RESET  = 'mbr_isa_reset_synonyms';
     const NOTICE_KEY    = 'mbr_isa_synonym_notice';
 
+    /**
+     * Fragment identifier of the "Add a new synonym group" card.
+     *
+     * @since 0.9.21
+     */
+    const ANCHOR_ADD    = 'mbr-isa-add-synonym';
+
     /** @var MBR_ISA_Synonyms */
     private $synonyms_service;
 
@@ -144,86 +151,6 @@ class MBR_ISA_Admin_Synonyms {
             </form>
         </div>
 
-        <style>
-            .mbr-isa-synonyms-page .mbr-isa-synonym-card {
-                background:#fff;
-                border:1px solid #c3c4c7;
-                border-radius:4px;
-                padding:1em 1.5em;
-                margin:1em 0;
-                max-width:900px;
-                box-shadow:0 1px 1px rgba(0,0,0,.04);
-            }
-            .mbr-isa-synonyms-page .mbr-isa-synonym-card h3 {
-                margin:0 0 .5em;
-                display:flex;
-                align-items:center;
-                gap:.5em;
-                flex-wrap:wrap;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-synonym-card h3 code {
-                font-size:13px;
-                font-weight:normal;
-                background:#f0f0f1;
-                padding:2px 6px;
-                border-radius:3px;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-synonym-card textarea {
-                width:100%;
-                font-family:Menlo,Consolas,monospace;
-                font-size:13px;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-synonym-actions {
-                display:flex;
-                gap:.5em;
-                align-items:center;
-                margin-top:1em;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-synonym-actions form { display:inline; margin:0; }
-            .mbr-isa-synonyms-page .mbr-isa-test-panel {
-                background:#f0f6fc;
-                border:1px solid #c3d4e6;
-                border-radius:4px;
-                padding:1em 1.5em;
-                max-width:900px;
-                margin-top:1em;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-test-result {
-                background:#fff;
-                border:1px solid #dcdcde;
-                border-radius:4px;
-                padding:.75em 1em;
-                margin-top:.75em;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-test-result.is-no-expansion {
-                background:#fef8e7;
-                border-color:#dba617;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-token {
-                display:inline-block;
-                background:#dcdcde;
-                color:#1d2327;
-                padding:2px 8px;
-                margin:2px 4px 2px 0;
-                border-radius:10px;
-                font-size:12px;
-                font-family:Menlo,Consolas,monospace;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-token.is-added {
-                background:#cde7c4;
-                color:#0a4006;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-token-original {
-                color:#646970;
-                font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-                font-size:11px;
-                font-weight:normal;
-                margin-left:2px;
-            }
-            .mbr-isa-synonyms-page .mbr-isa-token.is-added .mbr-isa-token-original {
-                color:#3a6c2f;
-            }
-        </style>
         <?php
     }
 
@@ -377,7 +304,8 @@ class MBR_ISA_Admin_Synonyms {
         $preview_str = ! empty( $terms ) ? implode( ' • ', array_slice( $terms, 0, 5 ) ) : '';
 
         ?>
-        <div class="mbr-isa-synonym-card">
+        <div class="mbr-isa-synonym-card"
+             id="<?php echo esc_attr( $is_new ? self::ANCHOR_ADD : 'mbr-isa-synonym-g' . (int) $index ); ?>">
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <?php wp_nonce_field( self::ACTION_SAVE ); ?>
                 <input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_SAVE ); ?>">
@@ -493,7 +421,14 @@ class MBR_ISA_Admin_Synonyms {
         }
 
         update_option( self::OPTION_KEY, array_values( $groups ) );
-        $this->redirect_back();
+
+        // Adding leaves you at the blank form ready for the next group;
+        // editing returns you to the group you were editing.
+        $this->redirect_back(
+            $is_new
+                ? self::ANCHOR_ADD
+                : 'mbr-isa-synonym-g' . (int) $original_index
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -583,14 +518,33 @@ class MBR_ISA_Admin_Synonyms {
             // Lowercase for stable comparison (the tokeniser will lowercase
             // again anyway, but keeping it consistent in storage helps the
             // admin UI render a clean diff).
-            $part = function_exists( 'mb_strtolower' ) ? mb_strtolower( $part, 'UTF-8' ) : strtolower( $part );
+            $part = mb_strtolower( $part, 'UTF-8' );
             $out[] = $part;
         }
         return array_values( array_unique( $out ) );
     }
 
-    private function redirect_back() {
-        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+    /**
+     * Return to the synonyms screen, optionally at a particular card.
+     *
+     * The same annoyance the intents screen had until 0.9.20: the list is
+     * long, the add form is at the bottom, and a save returned you to the top.
+     * A successful save now returns to the card it concerns — the blank add
+     * form after an addition, so the next group can be typed straight away.
+     *
+     * Errors get no anchor, deliberately. The message they need to read is a
+     * notice at the top of the screen, and scrolling past it to a card would
+     * leave a refused save looking as though it had done nothing.
+     *
+     * @since 0.9.21
+     * @param string $anchor Fragment to scroll to, without the "#".
+     */
+    private function redirect_back( $anchor = '' ) {
+        $url = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+        if ( '' !== $anchor ) {
+            $url .= '#' . rawurlencode( $anchor );
+        }
+        wp_safe_redirect( $url );
         exit;
     }
 

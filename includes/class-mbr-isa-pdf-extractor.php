@@ -37,6 +37,32 @@ class MBR_ISA_PDF_Extractor {
     const PAGE_MARKER = "\xc2\xa4";
 
     /**
+     * Height in PDF points of each page, in document order.
+     *
+     * Populated by the page-aware walk and read by the indexer to estimate
+     * where on a page a passage begins (see get_page_heights()). Empty when
+     * the flat fallback walk ran, since that has no notion of pages at all.
+     *
+     * @var float[]
+     */
+    private $page_heights = [];
+
+    /**
+     * Page-tree nodes already visited during the current walk.
+     *
+     * The depth guard alone does not bound a cyclic /Kids graph. A node whose
+     * kids point back at it branches two ways per level, so the depth-32
+     * ceiling is reached only after roughly four billion calls — and because
+     * no /Type /Page is ever reached on that path, $order stays empty and the
+     * 5,000-page ceiling never fires either. A visited set is what actually
+     * terminates the walk.
+     *
+     * @since 0.9.9
+     * @var array<int,bool>
+     */
+    private $visited_nodes = [];
+
+    /**
      * Default maximum file size to attempt, in bytes. Larger files are skipped
      * to protect memory on shared hosting. Overridable per-call.
      */
@@ -48,6 +74,21 @@ class MBR_ISA_PDF_Extractor {
      * of prose needs for search.
      */
     const MAX_OUTPUT_CHARS = 500000;
+
+    /**
+     * Hard cap on the size a single decompressed stream may reach, in bytes.
+     *
+     * MAX_OUTPUT_CHARS bounds what reaches the index, but it is applied
+     * *after* inflation — so without this a small FlateDecode stream could
+     * expand to gigabytes and exhaust the PHP process before any output
+     * check ran. zlib compresses repetitive data at ratios past 1000:1, so a
+     * 5 MB stream inside an otherwise-legal 20 MB PDF is enough to do it.
+     *
+     * 4 MB is roughly eight times the output cap: comfortably above any
+     * genuine content stream, far below anything that threatens a 128 MB
+     * process.
+     */
+    const MAX_INFLATED_BYTES = 4194304; // 4 MB.
 
     /**
      * A TJ array horizontal adjustment more negative than this (thousandths of
@@ -66,6 +107,19 @@ class MBR_ISA_PDF_Extractor {
     private $last_status = 'ok';
 
     /**
+     * Running total of bytes produced by stream inflation during the current
+     * extract() call.
+     *
+     * The per-stream cap alone is not sufficient: a PDF can carry hundreds of
+     * separate streams, each individually under the limit but ruinous in
+     * aggregate. This budget bounds the whole document. Reset at the top of
+     * every extract().
+     *
+     * @var int
+     */
+    private $inflated_bytes = 0;
+
+    /**
      * Extract plain text from a PDF file.
      *
      * @param string   $file_path    Absolute path to the PDF on disk.
@@ -73,7 +127,8 @@ class MBR_ISA_PDF_Extractor {
      * @return string Extracted UTF-8 text, or '' on any failure/skip (see last_status()).
      */
     public function extract( $file_path, $max_filesize = null ) {
-        $this->last_status = 'ok';
+        $this->last_status    = 'ok';
+        $this->inflated_bytes = 0;
 
         if ( ! is_string( $file_path ) || '' === $file_path || ! is_readable( $file_path ) ) {
             return $this->fail( 'unreadable' );
@@ -133,6 +188,17 @@ class MBR_ISA_PDF_Extractor {
         return $text;
     }
 
+    /**
+     * Page heights in PDF points, in document order, or [] if unknown.
+     *
+     * Valid only for the extract() call that just completed.
+     *
+     * @return float[]
+     */
+    public function get_page_heights() {
+        return $this->page_heights;
+    }
+
     // =========================================================================
     // Page-aware extraction.
     // =========================================================================
@@ -166,12 +232,17 @@ class MBR_ISA_PDF_Extractor {
             return null;
         }
 
-        $pages = [];
-        $total = 0;
+        $pages              = [];
+        $heights            = [];
+        $total              = 0;
+        $this->page_heights = [];
 
         foreach ( $order as $obj_num ) {
             $body = $objects[ $obj_num ] ?? '';
             $text = '';
+
+            // Page geometry, for estimating where on the page a passage sits.
+            $heights[] = $this->page_height( $body, $objects );
 
             foreach ( $this->content_stream_refs( $body ) as $ref ) {
                 if ( ! isset( $objects[ $ref ] ) ) {
@@ -193,6 +264,17 @@ class MBR_ISA_PDF_Extractor {
         if ( '' === trim( implode( '', $pages ) ) ) {
             return null;
         }
+
+        /*
+         * Heights are kept only when one was resolved for every page. A
+         * partial list cannot be indexed alongside the page array without
+         * risking an off-by-one that would send a link to the wrong offset,
+         * and a wrong offset is worse than none: it lands the visitor
+         * confidently in the wrong place instead of predictably at the top.
+         */
+        $this->page_heights = ( count( $heights ) === count( $pages ) && ! in_array( 0.0, $heights, true ) )
+            ? $heights
+            : [];
 
         return $this->strip_running_headers( $pages );
     }
@@ -353,6 +435,8 @@ class MBR_ISA_PDF_Extractor {
 
         $order = [];
 
+        $this->visited_nodes = [];
+
         if ( null !== $root ) {
             $this->walk_page_tree( $objects, $root, $order, 0 );
         }
@@ -379,9 +463,19 @@ class MBR_ISA_PDF_Extractor {
      * @return void
      */
     private function walk_page_tree( array $objects, $node, array &$order, $depth ) {
+        $node = (int) $node;
+
         if ( $depth > 32 || ! isset( $objects[ $node ] ) || count( $order ) > 5000 ) {
             return;
         }
+
+        // A node reached twice is a cycle, not a second page. Without this a
+        // malformed or deliberately crafted /Kids graph runs until the PHP
+        // time limit kills the request that uploaded the file.
+        if ( isset( $this->visited_nodes[ $node ] ) ) {
+            return;
+        }
+        $this->visited_nodes[ $node ] = true;
 
         $body = $objects[ $node ];
 
@@ -579,15 +673,32 @@ class MBR_ISA_PDF_Extractor {
         if ( '' === $s ) {
             return null;
         }
-        $d = @gzuncompress( $s );
-        if ( false !== $d ) {
-            return $d;
+
+        // Document-wide budget already spent — refuse without decompressing.
+        if ( $this->inflated_bytes >= self::MAX_INFLATED_BYTES ) {
+            return null;
         }
-        $d = @gzinflate( $s );
-        if ( false !== $d ) {
-            return $d;
+
+        $budget = self::MAX_INFLATED_BYTES - $this->inflated_bytes;
+
+        // The $max_length argument is what makes this safe: zlib stops
+        // producing output at the limit instead of allocating whatever the
+        // stream asks for. A stream that exceeds it returns false and is
+        // skipped, which is the correct outcome — a content stream needing
+        // more than 4 MB of text is not something we want in the index
+        // regardless of intent.
+        $d = @gzuncompress( $s, $budget );
+        if ( false === $d ) {
+            $d = @gzinflate( $s, $budget );
         }
-        return null;
+
+        if ( false === $d || null === $d ) {
+            return null;
+        }
+
+        $this->inflated_bytes += strlen( $d );
+
+        return $d;
     }
 
     /**
@@ -829,7 +940,39 @@ class MBR_ISA_PDF_Extractor {
                 switch ( $token ) {
                     case 'Tj':
                     case 'TJ':
-                        // Ensure separation between successive show operators.
+                        /*
+                         * Deliberately nothing.
+                         *
+                         * This used to append a space after every show
+                         * operator, to keep successive ones from running
+                         * together. But two Tj operators with no positioning
+                         * between them continue at the current point: the
+                         * glyphs are adjacent on the page, so there is no
+                         * space there and inserting one invents a word break
+                         * that the document does not contain.
+                         *
+                         * Producers split strings constantly and for reasons
+                         * that have nothing to do with spacing — an escaped
+                         * entity, a font switch, an encoding change mid-word.
+                         * ReportLab writes "What's" as (What) Tj (') Tj
+                         * (s ...) Tj, which arrived in the index as
+                         * "what ' s" and could then never be found by anyone
+                         * quoting the phrase.
+                         *
+                         * Separation is now the business of the operators
+                         * that actually move the cursor, below. Everything
+                         * that genuinely starts a new run passes through one
+                         * of them first.
+                         */
+                        break;
+                    case 'Tm':
+                        // Sets the text matrix outright, so the next run may
+                        // begin anywhere — including immediately after a
+                        // Courier span on the same line, where a space is
+                        // wanted and no Td or T* will supply it. A space
+                        // rather than a newline: Tm is also emitted at the
+                        // head of every text object, where a break would be
+                        // wrong.
                         $out .= ' ';
                         break;
                     case 'Td':
@@ -1031,14 +1174,20 @@ class MBR_ISA_PDF_Extractor {
             return '';
         }
 
-        // Drop control chars except tab/newline/carriage-return.
-        $text = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', ' ', $text );
-        if ( null === $text ) {
-            // preg failed on invalid UTF-8 — scrub and retry.
-            $text = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', ' ', (string) $text );
+        // Drop control chars except tab/newline/carriage-return. If the
+        // unicode pattern cannot run — invalid UTF-8 reached this point,
+        // which subsetted and CID fonts routinely produce — fall back to the
+        // byte-wise form against the same text rather than against a variable
+        // the failure has already emptied. Assigning the result of the first
+        // pass straight back into $text threw the whole document away and
+        // reported it as having no text layer, which is indistinguishable
+        // from a genuine scan.
+        $scrubbed = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', ' ', $text );
+        if ( null === $scrubbed ) {
+            $scrubbed = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', ' ', $text );
         }
 
-        $text = (string) $text;
+        $text = (string) $scrubbed;
 
         // Remove leader runs — the rows of dots that join a contents-page
         // heading to its page number — together with the page number that
@@ -1055,18 +1204,15 @@ class MBR_ISA_PDF_Extractor {
             $text = $stripped;
         }
 
-        // Collapse whitespace now, so the contents-page rule below sees
-        // single spaces regardless of what the leader strip left behind.
-        $collapsed = preg_replace( '/\s+/u', ' ', $text );
-        if ( null !== $collapsed ) {
-            $text = $collapsed;
+        // Whitespace tidy. If the unicode pattern cannot run — invalid
+        // UTF-8 survived the decode — fall back to the byte-wise form against
+        // the same text rather than against an empty string, which threw the
+        // whole document away and reported it as having no text layer.
+        $tidied = preg_replace( '/\s+/u', ' ', $text );
+        if ( null === $tidied ) {
+            $tidied = preg_replace( '/\s+/', ' ', $text );
         }
-
-        // Final whitespace tidy.
-        $text = preg_replace( '/\s+/u', ' ', $text );
-        if ( null === $text ) {
-            $text = preg_replace( '/\s+/', ' ', '' );
-        }
+        $text = (string) $tidied;
 
         // Page markers are positional: each one is a page boundary, so runs
         // must NOT be collapsed and leading markers must not be trimmed. A
@@ -1075,4 +1221,60 @@ class MBR_ISA_PDF_Extractor {
         // sending deep links to the wrong page.
         return trim( (string) $text, " \t\n\r\0\x0B" );
     }
+
+    /**
+     * Height of a page in PDF points.
+     *
+     * Read from MediaBox, which is [llx lly urx ury] — the height is the
+     * difference of the y values, not simply ury, because the origin is not
+     * required to be zero.
+     *
+     * MediaBox is an inheritable attribute: a page that does not declare one
+     * takes its parent's, and most documents declare it once on the root
+     * Pages node. The parent chain is followed up to a small depth, which is
+     * plenty for any real page tree and cannot loop forever on a malformed
+     * one.
+     *
+     * A page rotated by 90 or 270 degrees swaps its effective width and
+     * height, so /Rotate is honoured — otherwise a landscape page would be
+     * measured against portrait dimensions and every offset on it would be
+     * wrong by the aspect ratio.
+     *
+     * @param string $body    Page object body.
+     * @param array  $objects Object number => body.
+     * @param int    $depth   Recursion guard.
+     * @return float Height in points, or 0.0 when it cannot be determined.
+     */
+    private function page_height( $body, array $objects, $depth = 0 ) {
+        if ( $depth > 8 || '' === (string) $body ) {
+            return 0.0;
+        }
+
+        $height = 0.0;
+
+        if ( preg_match( '/\/MediaBox\s*\[\s*([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s*\]/', $body, $m ) ) {
+            $height = abs( (float) $m[4] - (float) $m[2] );
+            $width  = abs( (float) $m[3] - (float) $m[1] );
+
+            if ( preg_match( '/\/Rotate\s+(-?\d+)/', $body, $r ) ) {
+                $rotate = ( (int) $r[1] % 360 + 360 ) % 360;
+                if ( 90 === $rotate || 270 === $rotate ) {
+                    $height = $width;
+                }
+            }
+
+            return $height > 0 ? $height : 0.0;
+        }
+
+        // Not declared here — inherit from the parent Pages node.
+        if ( preg_match( '/\/Parent\s+(\d+)\s+\d+\s+R/', $body, $p ) ) {
+            $parent = (int) $p[1];
+            if ( isset( $objects[ $parent ] ) ) {
+                return $this->page_height( $objects[ $parent ], $objects, $depth + 1 );
+            }
+        }
+
+        return 0.0;
+    }
+
 }

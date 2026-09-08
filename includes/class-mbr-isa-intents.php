@@ -187,7 +187,7 @@ class MBR_ISA_Intents {
      */
     private function normalise( $text ) {
         $text = (string) $text;
-        $text = function_exists( 'mb_strtolower' ) ? mb_strtolower( $text, 'UTF-8' ) : strtolower( $text );
+        $text = mb_strtolower( $text, 'UTF-8' );
         $text = preg_replace( '/\s+/u', ' ', $text );
         return trim( (string) $text );
     }

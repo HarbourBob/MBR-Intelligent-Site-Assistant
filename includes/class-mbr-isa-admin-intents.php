@@ -23,6 +23,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class MBR_ISA_Admin_Intents {
 
     const PAGE_SLUG       = 'mbr-isa-intents';
+
+    /**
+     * Fragment identifier of the "Add a new intent" card.
+     *
+     * @since 0.9.20
+     */
+    const ANCHOR_ADD      = 'mbr-isa-add-intent';
     const OPTION_KEY      = 'mbr_isa_intents';
     const ACTION_SAVE     = 'mbr_isa_save_intent';
     const ACTION_DELETE   = 'mbr_isa_delete_intent';
@@ -122,83 +129,6 @@ class MBR_ISA_Admin_Intents {
             </form>
         </div>
 
-        <style>
-            .mbr-isa-intents-page .mbr-isa-intent-card {
-                background:#fff;
-                border:1px solid #c3c4c7;
-                border-radius:4px;
-                padding:1em 1.5em;
-                margin:1em 0;
-                max-width:900px;
-                box-shadow:0 1px 1px rgba(0,0,0,.04);
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-card.is-disabled {
-                opacity:.7;
-                background:#f6f7f7;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-card h3 {
-                margin:0 0 .5em;
-                display:flex;
-                align-items:center;
-                gap:.5em;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-pill {
-                font-size:11px;
-                background:#dcdcde;
-                color:#1d2327;
-                padding:2px 8px;
-                border-radius:10px;
-                font-weight:normal;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-pill.is-disabled-pill {
-                background:#fcd5d5;
-                color:#8a1f11;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-card textarea {
-                width:100%;
-                font-family:Menlo,Consolas,monospace;
-                font-size:13px;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-row {
-                display:flex;
-                gap:1em;
-                flex-wrap:wrap;
-                align-items:flex-end;
-                margin-bottom:.75em;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-row > div { flex:1 1 200px; }
-            .mbr-isa-intents-page .mbr-isa-intent-card label.mbr-isa-field-label {
-                display:block;
-                font-weight:600;
-                margin-bottom:4px;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-actions {
-                display:flex;
-                gap:.5em;
-                align-items:center;
-                margin-top:1em;
-            }
-            .mbr-isa-intents-page .mbr-isa-intent-actions form { display:inline; margin:0; }
-            .mbr-isa-intents-page .mbr-isa-test-panel {
-                background:#f0f6fc;
-                border:1px solid #c3d4e6;
-                border-radius:4px;
-                padding:1em 1.5em;
-                max-width:900px;
-                margin-top:1em;
-            }
-            .mbr-isa-intents-page .mbr-isa-test-result {
-                background:#fff;
-                border:1px solid #dcdcde;
-                border-radius:4px;
-                padding:.75em 1em;
-                margin-top:.75em;
-            }
-            .mbr-isa-intents-page .mbr-isa-test-result.is-no-match {
-                background:#fef8e7;
-                border-color:#dba617;
-            }
-        </style>
         <?php
     }
 
@@ -222,7 +152,10 @@ class MBR_ISA_Admin_Intents {
                         <code><?php echo esc_html( $test_hit['id'] ); ?></code>
                         <span class="mbr-isa-pill"><?php echo esc_html( $test_hit['label'] ); ?></span>
                         <span style="color:#666;font-size:12px;">
-                            <?php echo esc_html( sprintf( __( 'confidence: %s', 'mbr-isa' ), number_format_i18n( $test_hit['confidence'], 2 ) ) ); ?>
+                            <?php
+                            /* translators: %s: confidence score, formatted to two decimal places */
+                            echo esc_html( sprintf( __( 'confidence: %s', 'mbr-isa' ), number_format_i18n( $test_hit['confidence'], 2 ) ) );
+                            ?>
                         </span>
                         <div style="margin-top:.5em;font-size:13px;color:#444;">
                             <?php echo wp_kses_post( $test_hit['response'] ); ?>
@@ -257,7 +190,8 @@ class MBR_ISA_Admin_Intents {
         }
 
         ?>
-        <div class="<?php echo esc_attr( $card_class ); ?>">
+        <div class="<?php echo esc_attr( $card_class ); ?>"
+             id="<?php echo esc_attr( $is_new ? self::ANCHOR_ADD : 'mbr-isa-intent-' . $id ); ?>">
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <?php wp_nonce_field( self::ACTION_SAVE ); ?>
                 <input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_SAVE ); ?>">
@@ -330,7 +264,7 @@ class MBR_ISA_Admin_Intents {
                         rows="4"
                         placeholder="contact&#10;email address&#10;get in touch&#10;re:\bhours?\b"
                     ><?php echo esc_textarea( implode( "\n", $triggers ) ); ?></textarea>
-                    <p class="description"><?php esc_html_e( 'One trigger per line. Substring match by default; prefix with "re:" for a regular expression.', 'mbr-isa' ); ?></p>
+                    <p class="description"><?php esc_html_e( 'One trigger per line. Substring match by default; prefix with "re:" for a regular expression. Up to 10 regex triggers per intent, 250 characters each; nested repetitions such as (a+)+ are rejected because they can be extremely slow to match.', 'mbr-isa' ); ?></p>
                 </div>
 
                 <div style="margin-bottom:.75em;">
@@ -424,16 +358,9 @@ class MBR_ISA_Admin_Intents {
             $this->redirect_back();
         }
 
-        $bad_regex = $this->find_invalid_regex_trigger( $triggers );
-        if ( null !== $bad_regex ) {
-            $this->set_notice(
-                'error',
-                sprintf(
-                    /* translators: %s: the offending trigger */
-                    __( 'The regex trigger %s is not a valid regular expression.', 'mbr-isa' ),
-                    '<code>' . esc_html( $bad_regex ) . '</code>'
-                )
-            );
+        $regex_error = $this->validate_regex_triggers( $triggers );
+        if ( null !== $regex_error ) {
+            $this->set_notice( 'error', $regex_error );
             $this->redirect_back();
         }
 
@@ -515,7 +442,10 @@ class MBR_ISA_Admin_Intents {
         }
 
         update_option( self::OPTION_KEY, array_values( $intents ) );
-        $this->redirect_back();
+
+        // Adding leaves you at the blank form ready for the next one; editing
+        // returns you to the intent you were editing.
+        $this->redirect_back( $is_new ? self::ANCHOR_ADD : 'mbr-isa-intent-' . $new_id );
     }
 
     // -------------------------------------------------------------------------
@@ -613,29 +543,143 @@ class MBR_ISA_Admin_Intents {
     }
 
     /**
-     * Return the first invalid "re:" trigger, or null if all are valid.
+     * Longest permitted "re:" pattern, in characters.
      *
-     * @param array $triggers
-     * @return string|null
+     * Genuine triggers are short — a word-boundary match is a dozen characters.
+     * The limit bounds how much work one pattern can ask the engine to do; it is
+     * not meant to constrain legitimate use.
      */
-    private function find_invalid_regex_trigger( array $triggers ) {
-        foreach ( $triggers as $trigger ) {
-            if ( 0 !== stripos( $trigger, 're:' ) ) {
-                continue;
-            }
-            $pattern      = substr( $trigger, 3 );
-            $full_pattern = '/' . str_replace( '/', '\/', $pattern ) . '/iu';
+    const MAX_REGEX_LENGTH = 250;
 
-            // Suppress warnings; preg_match returns false on invalid pattern.
-            if ( @preg_match( $full_pattern, '' ) === false ) {
-                return $trigger;
+    /** Most "re:" triggers allowed on a single intent. */
+    const MAX_REGEX_TRIGGERS = 10;
+
+    /**
+     * Validate every "re:" trigger, returning an error message or null.
+     *
+     * Three checks, in increasing order of fussiness.
+     *
+     * Syntactic validity is the only strictly necessary one — an invalid pattern
+     * makes the intent silently stop matching. The other two bound catastrophic
+     * backtracking: a pattern such as (a+)+$ is perfectly valid and will hang PHP
+     * on a long non-matching subject. Intent matching runs on the public search
+     * endpoint, so a hang there is visitor-facing.
+     *
+     * This is deliberately a coarse net rather than an analysis. Saving an intent
+     * requires manage_options, so the realistic case is an administrator pasting
+     * a pattern from the internet without reading it, not an attacker — and the
+     * cheap checks catch that. A determined administrator can still write a slow
+     * pattern, just as they can still write slow PHP.
+     *
+     * @param array $triggers Parsed trigger lines.
+     * @return string|null Error message with escaped markup, or null if all pass.
+     */
+    private function validate_regex_triggers( array $triggers ) {
+        $regex_triggers = [];
+        foreach ( $triggers as $trigger ) {
+            if ( 0 === stripos( $trigger, 're:' ) ) {
+                $regex_triggers[] = $trigger;
             }
         }
+
+        if ( count( $regex_triggers ) > self::MAX_REGEX_TRIGGERS ) {
+            return sprintf(
+                /* translators: %d: maximum number of regex triggers */
+                __( 'An intent may have at most %d regex triggers. Plain substring triggers are unlimited, and are usually the better choice.', 'mbr-isa' ),
+                self::MAX_REGEX_TRIGGERS
+            );
+        }
+
+        foreach ( $regex_triggers as $trigger ) {
+            $pattern = substr( $trigger, 3 );
+            $shown   = '<code>' . esc_html( $trigger ) . '</code>';
+
+            if ( strlen( $pattern ) > self::MAX_REGEX_LENGTH ) {
+                return sprintf(
+                    /* translators: 1: offending trigger, 2: maximum length */
+                    __( 'The regex trigger %1$s is longer than %2$d characters. A long pattern is usually better expressed as several short ones.', 'mbr-isa' ),
+                    $shown,
+                    self::MAX_REGEX_LENGTH
+                );
+            }
+
+            $full_pattern = '/' . str_replace( '/', '\/', $pattern ) . '/iu';
+
+            // Suppress warnings; preg_match returns false on an invalid pattern.
+            if ( @preg_match( $full_pattern, '' ) === false ) {
+                return sprintf(
+                    /* translators: %s: offending trigger */
+                    __( 'The regex trigger %s is not a valid regular expression.', 'mbr-isa' ),
+                    $shown
+                );
+            }
+
+            if ( $this->regex_looks_pathological( $pattern ) ) {
+                return sprintf(
+                    /* translators: %s: offending trigger */
+                    __( 'The regex trigger %s nests one repetition inside another, which can make matching extremely slow on some inputs. Please rewrite it without the nested quantifier.', 'mbr-isa' ),
+                    $shown
+                );
+            }
+        }
+
         return null;
     }
 
-    private function redirect_back() {
-        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+    /**
+     * Detect the two classic catastrophic-backtracking shapes.
+     *
+     * First: a group containing a repetition, itself repeated — (a+)+, (\s*)*,
+     * (x{2,}){3,}. Second: a repeated group of alternatives that can match the
+     * same text more than one way, as in (a|a)+. Both give the engine an
+     * exponential number of ways to fail, so a non-matching subject of a few
+     * dozen characters can outlast the request.
+     *
+     * Not exhaustive, and not meant to be. It catches the forms people copy
+     * without understanding them. See validate_regex_triggers().
+     *
+     * @param string $pattern The pattern, without the "re:" prefix.
+     * @return bool
+     */
+    private function regex_looks_pathological( $pattern ) {
+        $quantifier = '(?:[*+]|\{\d+,\d*\})';
+        $atom       = '(?:[^()\\\\]|\\\\.)';
+
+        // A group containing a quantifier, itself quantified.
+        if ( @preg_match( '/\(' . $atom . '*' . $quantifier . $atom . '*\)\s*' . $quantifier . '/', $pattern ) ) {
+            return true;
+        }
+
+        // A quantified group of alternatives.
+        if ( @preg_match( '/\(' . $atom . '*\|' . $atom . '*\)\s*' . $quantifier . '/', $pattern ) ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Return to the intents screen, optionally at a particular card.
+     *
+     * Adding an intent used to drop you back at the top of the page, so
+     * adding several in a row meant scrolling to the bottom again each time.
+     * A successful save now returns to the card it concerns — the blank
+     * "add" form when something was just added, so the next one can be typed
+     * straight away, or the edited intent's own card otherwise.
+     *
+     * Errors deliberately get no anchor. The message they need to read is a
+     * notice at the top of the screen, and scrolling past it to a card would
+     * leave the save looking as though it had simply done nothing.
+     *
+     * @since 0.9.20
+     * @param string $anchor Fragment to scroll to, without the "#".
+     */
+    private function redirect_back( $anchor = '' ) {
+        $url = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+        if ( '' !== $anchor ) {
+            $url .= '#' . rawurlencode( $anchor );
+        }
+        wp_safe_redirect( $url );
         exit;
     }
 

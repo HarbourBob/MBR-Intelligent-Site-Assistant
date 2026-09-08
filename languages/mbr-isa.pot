@@ -1,0 +1,1354 @@
+# Copyright (C) 2026 Robert Palmer
+# This file is distributed under the GPL-2.0-or-later licence.
+msgid ""
+msgstr ""
+"Project-Id-Version: MBR Intelligent Site Assistant 0.9.21\n"
+"Report-Msgid-Bugs-To: https://littlewebshack.com\n"
+"POT-Creation-Date: 2026-09-03 12:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: mbr-isa\n"
+
+#: includes/class-mbr-isa-admin-intents.php:56 includes/class-mbr-isa-admin-intents.php:57
+msgid "MBR ISA Intents"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:86
+msgid "MBR Intelligent Site Assistant — Intents"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:89
+msgid "Intents match known question patterns to pre-written answers. They run before the search index, so the common questions get perfect answers every time. Triggers are matched as case-insensitive substrings; prefix a trigger with \"re:\" to use it as a regular expression (e.g. \"re:\\bhours?\\b\")."
+msgstr ""
+
+#. translators: %d: number of intents
+#: includes/class-mbr-isa-admin-intents.php:104
+msgid "Configured intent (%d)"
+msgid_plural "Configured intents (%d)"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-mbr-isa-admin-intents.php:111
+msgid "No intents configured. Add one below, or reset to the shipped defaults."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:118
+msgid "Add a new intent"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:121 includes/class-mbr-isa-admin-intents.php:128 includes/class-mbr-isa-admin-synonyms.php:143 includes/class-mbr-isa-admin-synonyms.php:150
+#: includes/class-mbr-isa-admin-theme.php:267
+msgid "Reset to defaults"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:123
+msgid "Replaces all intents with the defaults shipped with the plugin. Your edits will be lost."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:125
+msgid "Replace all intents with the shipped defaults? This cannot be undone."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:138
+msgid "Test a query"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:140
+msgid "Type a question and see which intent (if any) would match. Useful for sanity-checking trigger phrases."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:144
+msgid "e.g. how can I contact you?"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:145 includes/class-mbr-isa-admin-synonyms.php:168
+msgid "Test"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:151
+msgid "Matched intent:"
+msgstr ""
+
+#. translators: %s: confidence score, formatted to two decimal places
+#: includes/class-mbr-isa-admin-intents.php:157
+msgid "confidence: %s"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:166
+msgid "No intent matched."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:168
+msgid "The query would fall through to the search index."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:202
+msgid "New intent"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:209
+msgid "disabled"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:217
+msgid "ID"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:228
+msgid "Lowercase letters, numbers, dashes, underscores."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:232
+msgid "Label"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:241
+msgid "Human-friendly name shown in diagnostics."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:245
+msgid "Confidence"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:253
+msgid "0.0 – 1.0. Higher wins ties."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:259
+msgid "Triggers"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:267
+msgid "One trigger per line. Substring match by default; prefix with \"re:\" for a regular expression. Up to 10 regex triggers per intent, 250 characters each; nested repetitions such as (a+)+ are rejected because they can be extremely slow to match."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:272
+msgid "Response"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:280
+msgid "Basic HTML allowed (links, <strong>, <em>, <br>, lists, etc.). Sanitised on save."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:287
+msgid "Disabled — keep this intent in the list but don't fire it."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:293
+msgid "Add intent"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:293 includes/class-mbr-isa-admin-synonyms.php:348
+msgid "Save changes"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:302
+msgid "Delete the \"%s\" intent? This cannot be undone."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:307
+msgid "Delete intent"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:350
+msgid "ID is required and must contain only lowercase letters, numbers, dashes or underscores."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:357
+msgid "At least one trigger is required."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:370
+msgid "Response cannot be empty."
+msgstr ""
+
+#. translators: %s: the duplicate ID
+#: includes/class-mbr-isa-admin-intents.php:401
+msgid "An intent with the ID %s already exists. Pick a different ID."
+msgstr ""
+
+#. translators: %s: intent ID
+#: includes/class-mbr-isa-admin-intents.php:423
+msgid "Intent %s added."
+msgstr ""
+
+#. translators: %s: intent ID
+#: includes/class-mbr-isa-admin-intents.php:440
+msgid "Intent %s saved."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:464
+msgid "No intent ID supplied."
+msgstr ""
+
+#. translators: %s: intent ID
+#: includes/class-mbr-isa-admin-intents.php:489
+msgid "Intent %s deleted."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:492
+msgid "No matching intent was found to delete."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-intents.php:511
+msgid "Intents reset to the shipped defaults."
+msgstr ""
+
+#. translators: %d: maximum number of regex triggers
+#: includes/class-mbr-isa-admin-intents.php:588
+msgid "An intent may have at most %d regex triggers. Plain substring triggers are unlimited, and are usually the better choice."
+msgstr ""
+
+#. translators: 1: offending trigger, 2: maximum length
+#: includes/class-mbr-isa-admin-intents.php:600
+msgid "The regex trigger %1$s is longer than %2$d characters. A long pattern is usually better expressed as several short ones."
+msgstr ""
+
+#. translators: %s: offending trigger
+#: includes/class-mbr-isa-admin-intents.php:612
+msgid "The regex trigger %s is not a valid regular expression."
+msgstr ""
+
+#. translators: %s: offending trigger
+#: includes/class-mbr-isa-admin-intents.php:620
+msgid "The regex trigger %s nests one repetition inside another, which can make matching extremely slow on some inputs. Please rewrite it without the nested quantifier."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:65 includes/class-mbr-isa-admin-synonyms.php:66
+msgid "MBR ISA Synonyms"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:108
+msgid "MBR Intelligent Site Assistant — Synonyms"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:111
+msgid "Synonym groups make the search index smarter. When a query contains any term in a group, all other terms in that group are added to the search — so \"WP\" finds \"WordPress\", and \"shop\" finds \"store\". Each group should contain at least two equivalent terms."
+msgstr ""
+
+#. translators: %d: number of synonym groups
+#: includes/class-mbr-isa-admin-synonyms.php:126
+msgid "Configured group (%d)"
+msgid_plural "Configured groups (%d)"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:133
+msgid "No synonym groups configured. Add one below, or reset to the shipped defaults."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:140
+msgid "Add a new synonym group"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:145
+msgid "Replaces all synonym groups with the defaults shipped with the plugin. Your edits will be lost."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:147
+msgid "Replace all synonym groups with the shipped defaults? This cannot be undone."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:161
+msgid "Test expansion"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:163
+msgid "Enter a query and see which extra tokens get added by the synonym groups. Each chip shows the stemmed form with the original word in brackets when it differs — the search index uses the stemmed form, but visitors never see it."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:167
+msgid "e.g. wp ecommerce plugin"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:174
+msgid "No tokens."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:176
+msgid "The query was emptied by tokenisation (stopwords or short tokens only)."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:182
+msgid "Original tokens:"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:189
+msgid "Added by synonyms:"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:196
+msgid "No synonyms matched these tokens."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:316
+msgid "New synonym group"
+msgstr ""
+
+#. translators: %d: 1-based index of the group
+#: includes/class-mbr-isa-admin-synonyms.php:321
+msgid "Group #%d"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:333
+msgid "Terms"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:342
+msgid "One term per line. Multi-word phrases are fine (\"search engine optimisation\"). At least two unique terms are required for the group to do anything."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:348
+msgid "Add group"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:357
+msgid "Delete this synonym group? This cannot be undone."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:362
+msgid "Delete group"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:391
+msgid "A synonym group needs at least two unique terms to be useful."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:411
+msgid "Synonym group added."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:416
+msgid "The original group was no longer available; added as a new group."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:419
+msgid "Synonym group saved."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:447
+msgid "No group index supplied."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:463
+msgid "No matching group was found to delete."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:471
+msgid "Synonym group deleted."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-synonyms.php:487
+msgid "Synonym groups reset to the shipped defaults."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:50
+msgid "Mocha"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:55
+msgid "Slate Light"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:60
+msgid "Ocean"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:65
+msgid "Sunset"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:70
+msgid "Forest"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:86 includes/class-mbr-isa-admin-theme.php:87
+msgid "MBR ISA Appearance"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:164
+msgid "MBR Intelligent Site Assistant — Appearance"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:167
+msgid "Choose a colour preset and optional glass effect for the public chat widget. The preview below updates as you change the controls — save to apply on the front end."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:176
+msgid "Live preview"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:185
+msgid "Colour preset"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:204
+msgid "Effects"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:208
+msgid "Glassmorphism"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:211
+msgid "Translucent panel with a backdrop blur. Looks best over rich page backgrounds (hero images, gradients). Modern browsers only — older browsers fall back to a solid panel."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:220
+msgid "Blur"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:234
+msgid "How far the panel blurs what is behind it. Higher costs more to composite while the page scrolls, so keep it modest on image-heavy pages."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:240
+msgid "Opacity"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:254
+msgid "How solid the panel is. Lower lets more of the page through — check your text is still readable over the busiest background it will sit on."
+msgstr ""
+
+#. translators: 1: default blur in px, 2: default opacity as a percentage.
+#: includes/class-mbr-isa-admin-theme.php:262
+msgid "Both values scale the whole effect — the header, footer and message bubbles keep their proportions to the panel rather than all blurring equally. Defaults are %1$dpx and %2$d%%."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:272
+msgid "Save appearance"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:315 includes/class-mbr-isa-frontend.php:362 includes/class-mbr-isa.php:1649
+msgid "Site Assistant"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:320 includes/class-mbr-isa-frontend.php:363 includes/class-mbr-isa.php:1656
+msgid "Hi! I can help you find things on this site. What are you looking for?"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:325
+msgid "How do I get in touch?"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:336
+msgid "You can reach us via the <a href=\"#\">contact form</a> in the main menu, or use the link below."
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:348 includes/class-mbr-isa-frontend.php:364 includes/class-mbr-isa.php:1663
+msgid "Ask a question…"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:357
+msgid "Preview mode"
+msgstr ""
+
+#: includes/class-mbr-isa-admin-theme.php:405
+msgid "Appearance settings saved. <strong>If your changes don't appear on the front end immediately</strong>, clear any caching plugins (WP Rocket, SiteGround Optimizer, LiteSpeed, W3 Total Cache, etc.) and any CDN cache, then hard-refresh the front end (Ctrl+Shift+R or Cmd+Shift+R)."
+msgstr ""
+
+#: includes/class-mbr-isa-alt-audit.php:93
+msgid "Unauthorised"
+msgstr ""
+
+#: includes/class-mbr-isa-alt-audit.php:128
+msgid "Not an attachment."
+msgstr ""
+
+#: includes/class-mbr-isa-alt-audit.php:132
+msgid "Unauthorised."
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:422
+msgid "Searching…"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:423
+msgid "I could not reach the server. Please try again."
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:424
+msgid "Something went wrong. Please try again."
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:425
+msgid "You are asking too quickly. Please wait a moment."
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:426
+msgid "Please type a question first."
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:427 includes/class-mbr-isa-frontend.php:520
+msgid "Open site assistant"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:428 includes/class-mbr-isa-frontend.php:543
+msgid "Close site assistant"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:429 includes/class-mbr-isa-frontend.php:575
+msgid "Send question"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:430
+msgid "You"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:431
+msgid "Assistant"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:432
+msgid "Suggested results:"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:433
+msgid "You could also:"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:434
+msgid "Was this helpful?"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:435
+msgid "Yes, this helped"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:436
+msgid "No, this did not help"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:437
+msgid "Thanks for the feedback."
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:438
+msgid "Image preview"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:439
+msgid "Close image preview"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:440
+msgid "View the page this image appears on"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:441
+msgid "Open larger preview"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:442
+msgid "More mentions in this document"
+msgstr ""
+
+#: includes/class-mbr-isa-frontend.php:562
+msgid "Your question"
+msgstr ""
+
+#. translators: %s: Little Web Shack link
+#: includes/class-mbr-isa-frontend.php:588
+msgid "Powered by %s"
+msgstr ""
+
+#. translators: %s: Little Web Shack link
+#: includes/class-mbr-isa-frontend.php:589 includes/class-mbr-isa.php:207
+msgid "MBR Intelligent Site Assistant"
+msgstr ""
+
+#: includes/class-mbr-isa-query-handler.php:515
+msgid "You might also find these useful:"
+msgstr ""
+
+#. translators: %d: page number within a PDF
+#: includes/class-mbr-isa-responder.php:554
+msgid "Page %d"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:603
+msgid "IMAGE"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:739
+msgid "Ask me something else about this site"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:752
+msgid "What would you like to know? Try asking about a specific topic or service."
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:820
+msgid "Here is what I found on this site about that:"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:822
+msgid "A few things on this site look relevant:"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:824
+msgid "I am not sure I found exactly what you are looking for, but these might help:"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:827
+msgid "I could not find anything specific about that on this site. Would you like to get in touch directly?"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:840
+msgid "Get in touch directly"
+msgstr ""
+
+#: includes/class-mbr-isa-responder.php:841
+msgid "Try rephrasing your question"
+msgstr ""
+
+#. translators: %s: the exact phrase the visitor searched for
+#: includes/class-mbr-isa-responder.php:1013
+msgid "I could not find the exact phrase \"%s\" on this site. Searching without the quotes will look for the words separately."
+msgstr ""
+
+#. translators: %s: the exact phrase the visitor searched for
+#: includes/class-mbr-isa-responder.php:1020
+msgid "Here is what contains the exact phrase \"%s\":"
+msgstr ""
+
+#: includes/class-mbr-isa-rest.php:157
+msgid "Too many requests. Please wait a moment and try again."
+msgstr ""
+
+#: includes/class-mbr-isa-rest.php:194
+msgid "Too many requests. Please wait a moment."
+msgstr ""
+
+#: includes/class-mbr-isa-updater.php:167
+msgid "MBR Intelligent Site Assistant: the update manifest published no SHA-256 checksum for this package, and this site is configured to require one. The update was not installed."
+msgstr ""
+
+#. translators: 1: expected SHA-256 digest, 2: digest of the downloaded file
+#: includes/class-mbr-isa-updater.php:197
+msgid "MBR Intelligent Site Assistant: the downloaded update did not match the checksum published in its manifest, so it has been discarded rather than installed. Expected %1$s, got %2$s. If you have just published a release, check that the manifest digest matches the uploaded package."
+msgstr ""
+
+#: includes/class-mbr-isa.php:209
+msgid "Your search index needs rebuilding before it matches how this version indexes content."
+msgstr ""
+
+#: includes/class-mbr-isa.php:214
+msgid "Version 0.8.2 was too strict about which PDFs it would index: it required the WordPress attachment relationship, which is only set for files uploaded from inside the post editor. PDFs added through the Media Library were skipped even when published pages linked to them. This release fixes that, and your \"Which PDFs\" setting has been moved to the corrected option."
+msgstr ""
+
+#: includes/class-mbr-isa.php:220
+msgid "This version also stops password-protected posts being indexed. Content indexed by an earlier version is still present and still searchable until you rebuild."
+msgstr ""
+
+#: includes/class-mbr-isa.php:225
+msgid "Go to Diagnostics and run a full reindex"
+msgstr ""
+
+#: includes/class-mbr-isa.php:386 includes/class-mbr-isa.php:387
+msgid "MBR Site Assistant"
+msgstr ""
+
+#: includes/class-mbr-isa.php:666 includes/class-mbr-isa.php:667
+msgid "MBR ISA Diagnostics"
+msgstr ""
+
+#: includes/class-mbr-isa.php:730
+msgid "Saving..."
+msgstr ""
+
+#: includes/class-mbr-isa.php:731
+msgid "Saved"
+msgstr ""
+
+#: includes/class-mbr-isa.php:732
+msgid "Could not save"
+msgstr ""
+
+#: includes/class-mbr-isa.php:733
+msgid "Reindexing… this page will refresh when complete."
+msgstr ""
+
+#: includes/class-mbr-isa.php:754 includes/class-mbr-isa.php:903
+msgid "Status"
+msgstr ""
+
+#: includes/class-mbr-isa.php:755
+msgid "Content"
+msgstr ""
+
+#: includes/class-mbr-isa.php:756
+msgid "Alt Text"
+msgstr ""
+
+#: includes/class-mbr-isa.php:757
+msgid "Privacy"
+msgstr ""
+
+#: includes/class-mbr-isa.php:758
+msgid "Widget"
+msgstr ""
+
+#: includes/class-mbr-isa.php:759 includes/class-mbr-isa.php:1782
+msgid "Feedback"
+msgstr ""
+
+#: includes/class-mbr-isa.php:760
+msgid "Testers"
+msgstr ""
+
+#: includes/class-mbr-isa.php:823
+msgid "MBR Intelligent Site Assistant — Diagnostics"
+msgstr ""
+
+#: includes/class-mbr-isa.php:824
+msgid "Status, content sources, privacy and the testers, grouped into tabs."
+msgstr ""
+
+#: includes/class-mbr-isa.php:828
+msgid "Manage intents →"
+msgstr ""
+
+#: includes/class-mbr-isa.php:831
+msgid "Manage synonyms →"
+msgstr ""
+
+#: includes/class-mbr-isa.php:834
+msgid "Appearance →"
+msgstr ""
+
+#: includes/class-mbr-isa.php:838
+msgid "Diagnostics sections"
+msgstr ""
+
+#: includes/class-mbr-isa.php:891
+msgid "Plugin Status"
+msgstr ""
+
+#: includes/class-mbr-isa.php:894
+msgid "Plugin Version"
+msgstr ""
+
+#: includes/class-mbr-isa.php:895
+msgid "DB Version"
+msgstr ""
+
+#: includes/class-mbr-isa.php:896
+msgid "PHP Version"
+msgstr ""
+
+#: includes/class-mbr-isa.php:897
+msgid "REST endpoint"
+msgstr ""
+
+#: includes/class-mbr-isa.php:901
+msgid "Database Tables"
+msgstr ""
+
+#: includes/class-mbr-isa.php:903
+msgid "Table"
+msgstr ""
+
+#: includes/class-mbr-isa.php:920
+msgid "Index Status"
+msgstr ""
+
+#: includes/class-mbr-isa.php:923
+msgid "Documents indexed"
+msgstr ""
+
+#: includes/class-mbr-isa.php:924
+msgid "Unique terms in dictionary"
+msgstr ""
+
+#: includes/class-mbr-isa.php:925
+msgid "Total postings"
+msgstr ""
+
+#: includes/class-mbr-isa.php:926
+msgid "Last full reindex"
+msgstr ""
+
+#. translators: 1: document count, 2: chunk count, 3: duration in seconds
+#: includes/class-mbr-isa.php:935
+msgid "Reindex complete: %1$d documents as %2$d chunks in %3$s seconds."
+msgstr ""
+
+#. translators: 1: number of failed items, 2: number attempted
+#: includes/class-mbr-isa.php:943
+msgid "%1$d of %2$d items could not be written to the index. This usually means the database schema is out of date — check the DB Version above, and deactivate and reactivate the plugin to re-run the upgrade."
+msgstr ""
+
+#: includes/class-mbr-isa.php:955
+msgid "Run Full Reindex"
+msgstr ""
+
+#: includes/class-mbr-isa.php:959
+msgid "Indexes all published content of the post types selected on the Content tab (and PDFs, if enabled)."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1084
+msgid "Content Sources"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1085
+msgid "Choose which content the assistant indexes."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1089
+msgid "Content settings saved. Run a full reindex to apply the change to existing files."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1100
+msgid "Post types"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1103
+msgid "Post types to index"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1120
+msgid "Enabled but not currently registered:"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1121
+msgid "these were set previously but no post type of that name exists right now — most often because the plugin or theme that registered it is inactive. Untick to remove."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1127
+msgid "(not registered)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1133
+msgid "Which post types the assistant indexes. Only published content is indexed. Custom post types appear here automatically once registered."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1136
+msgid "Only publicly-viewable post types are listed. Results are returned through a public endpoint, so private or internal post types are deliberately not offered."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1141
+msgid "PDF files"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1145
+msgid "Index PDF files from the Media Library."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1148
+msgid "Extracts the text layer from each PDF. Scanned/image-only PDFs with no text layer are skipped automatically. Results link straight to the file."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1153
+msgid "Which PDFs"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1158
+msgid "PDFs published somewhere on the site (recommended)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1160
+msgid "Indexed when a published, unprotected page either owns the file or links to it. Covers files uploaded through the Media Library, which is most of them."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1165
+msgid "Only PDFs attached to a published page or post (strict)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1167
+msgid "Uses the WordPress attachment relationship only, which is set when a file is uploaded from inside the post editor. Files added through Media &rsaquo; Add New, or brought in by an import, are excluded even if pages link to them."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1172
+msgid "Every PDF in the Media Library"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1174
+msgid "Includes files nothing links to — drafts, superseded documents, anything uploaded and forgotten. Choose this only if the whole library is meant to be public."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1179
+msgid "Media Library files are reachable by URL whether or not anything links to them. This setting decides whether their text also becomes searchable through the assistant."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1183 includes/class-mbr-isa.php:1261
+msgid "Currently eligible:"
+msgstr ""
+
+#. translators: 1: eligible count, 2: number of PDFs tested, 3: total PDFs in the library
+#: includes/class-mbr-isa.php:1187
+msgid "%1$d of the %2$d most recent PDFs tested (%3$d in the Media Library)."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1195
+msgid "No PDFs qualify under the current setting, so none will be indexed. If you expected some, try the recommended option above."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1203
+msgid "Images"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1207
+msgid "Index images from the Media Library."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1210
+msgid "Images are indexed on their alt text, caption, description and filename — everything a person has written about the picture. Nothing is read from the image itself. Results link to the page the image appears on, not to the file."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1213
+msgid "JPEG, PNG, GIF, WebP and AVIF. SVG files are not indexed."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1218
+msgid "Which images"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1223
+msgid "Images published somewhere on the site (recommended)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1225
+msgid "Indexed when a published, unprotected page either owns the image or displays it."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1230
+msgid "Only images attached to a published page or post (strict)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1232
+msgid "Uses the WordPress attachment relationship only. Images added through Media &rsaquo; Add New, or brought in by an import, are excluded even where pages display them."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1237
+msgid "Every image in the Media Library"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1239
+msgid "Rarely what you want. A Media Library accumulates logos, backgrounds, superseded artwork and images uploaded to pages that were never published — all of which become searchable under this setting."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1246
+msgid "Image alt text"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1250
+msgid "Only index images that have alt text."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1253
+msgid "Alt text is the one field written specifically to describe what is in the picture, so it is by some distance the best thing to search on. Leaving this ticked indexes the images somebody has described and skips the rest."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1256
+msgid "Untick it and a caption, a description, or a filename that actually says something will do instead. Filenames like IMG_4821 or screenshot-2026-08-18 are ignored either way — they would only ever match the wrong thing."
+msgstr ""
+
+#. translators: 1: eligible count, 2: number of images tested, 3: total images in the library
+#: includes/class-mbr-isa.php:1265
+msgid "%1$d of the %2$d most recent images tested (%3$d in the Media Library)."
+msgstr ""
+
+#. translators: %d: number of images skipped for having no description
+#: includes/class-mbr-isa.php:1277
+msgid "%d image is published but has nothing written about it, so it is skipped. Adding alt text in the Media Library brings it in."
+msgid_plural "%d images are published but have nothing written about them, so they are skipped. Adding alt text in the Media Library brings them in."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-mbr-isa.php:1290
+msgid "No images in the sample qualify under the current settings. If you expected some, check the alt text requirement above."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1298
+msgid "Maximum PDF size"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1301
+msgid "MB"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1303
+msgid "PDFs larger than this are skipped to protect memory on shared hosting. Range 1–100."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1311
+msgid "Save content settings"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1328
+msgid "Alt Text Audit"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1331
+msgid "Finds images with no alt text and sorts them by how many published pages actually display each one, so the images worth describing come first."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1334
+msgid "This plugin does not write alt text for you. It cannot see images — anything it invented would be guessed from the filename or the surrounding page, and alt text that describes the wrong thing is worse for a screen reader user than none at all. An image that is purely decorative is meant to have empty alt text, and only a person looking at it can tell the difference."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1340
+msgid "Scan the Media Library"
+msgstr ""
+
+#. translators: %s: number of images marked decorative
+#: includes/class-mbr-isa.php:1346
+msgid "Include the %s image marked decorative"
+msgid_plural "Include the %s images marked decorative"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: human-readable time difference, 2: number of published posts scanned
+#: includes/class-mbr-isa.php:1359
+msgid "Last scanned %1$s ago, across %2$s published posts."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1370
+msgid "Every image in the Media Library has alt text. Nothing to do."
+msgstr ""
+
+#. translators: 1: number of rows listed, 2: total images found missing alt text
+#: includes/class-mbr-isa.php:1380
+msgid "Showing %1$s of %2$s images with no alt text, most-used first."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1390
+msgid "Image"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1391
+msgid "File"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1392
+msgid "Used on"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1393
+msgid "Alt text"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1417
+msgid "Caption:"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1422
+msgid "Description:"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1430
+msgid "Open in Media Library"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1436
+msgid "page"
+msgid_plural "pages"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-mbr-isa.php:1445
+msgid "Not on any published page"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1452
+msgid "Describe what the image shows..."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1454
+msgid "Save"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1458
+msgid "Not decorative"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1462
+msgid "Decorative"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1473
+msgid "\"Decorative\" stores empty alt text deliberately, which tells a screen reader to skip the image. That is the right answer for spacers, background flourishes and borders, and the wrong one for anything carrying meaning. Marked images drop out of this list; re-scan including them to undo."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1504
+msgid "7 days"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1505
+msgid "30 days"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1506
+msgid "90 days"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1507
+msgid "Keep indefinitely"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1511
+msgid "Privacy &amp; Query Log"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1512
+msgid "The query log records what visitors typed, so it can contain whatever they chose to put in the box — including personal details they were never asked for. Keep only what you will actually use."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1516
+msgid "Privacy settings saved. Any rows older than the new retention period have been removed."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1523
+msgid "Rows currently stored"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1527
+msgid "Oldest entry"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1528
+msgid "None"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1531
+msgid "Next scheduled cleanup"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1538
+msgid "Not scheduled"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1553
+msgid "Query logging"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1557
+msgid "Record queries so they can be reviewed for tuning."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1560
+msgid "Stores the query text, the matched result, and a salted hash of the visitor's IP address. The raw IP is never written to the database."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1563
+msgid "Switching this off also disables the thumbs up/down rating buttons, which record against a logged row."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1568
+msgid "Keep entries for"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1578
+msgid "Older entries are deleted by a daily background task. Saving this form applies the new period immediately."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1581
+msgid "\"Keep indefinitely\" means exactly that — the table will grow for as long as the plugin is active. Only choose it if you have a reason to hold the history."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1589
+msgid "Save privacy settings"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1610
+msgid "Widget Settings"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1611
+msgid "Configure the public-facing chat widget. When enabled, the floating bubble appears on every page of the site. You can also embed the widget inline with the shortcode below."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1615
+msgid "Widget settings saved."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1626
+msgid "Floating widget"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1630
+msgid "Show the floating chat bubble on the site."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1633
+msgid "When off, the widget only appears where the shortcode is explicitly used."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1638
+msgid "Position"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1641
+msgid "Bottom right"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1642
+msgid "Bottom left"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1647
+msgid "Widget title"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1650
+msgid "Shown in the panel header. Leave blank for default."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1654
+msgid "Greeting message"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1657
+msgid "First message the assistant shows. Leave blank for default."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1661
+msgid "Input placeholder"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1667
+msgid "Shortcode"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1671
+msgid "Paste into any page, post, or widget to embed the chat inline. Supports attributes: title, greeting, placeholder, height. Example:"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1680
+msgid "Save Widget Settings"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1730
+msgid "Feedback & Queries (last 7 days)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1734
+msgid "Total queries"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1738
+msgid "Thumbs up"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1742
+msgid "Thumbs down"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1746
+msgid "No feedback given"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1750
+msgid "Zero-result queries"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1764
+msgid "Intent hits"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1770
+msgid "Recent queries"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1772
+msgid "No queries logged yet. Make sure \"Log queries\" is enabled in settings."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1777
+msgid "When"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1778
+msgid "Query"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1779
+msgid "Intent"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1780 includes/class-mbr-isa.php:1899
+msgid "Results"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1781
+msgid "Top score"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1832
+msgid "Showing the 30 most recent queries. Rows shaded red had zero results or a thumbs-down — those are the ones to look at first (add an intent or synonym)."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1865
+msgid "Tokeniser Tester"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1869
+msgid "Tokenise"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1883
+msgid "Search Tester (raw BM25)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1884
+msgid "Bypasses intents and synonyms. Useful for debugging ranking."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1888
+msgid "Search"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1893
+msgid "Query trace"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1901
+msgid "No results."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1922
+msgid "Chat Tester (full pipeline)"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1923
+msgid "Runs intents → tokenise → synonym expansion → BM25 → responder. This is what the public widget will do."
+msgstr ""
+
+#: includes/class-mbr-isa.php:1927
+msgid "Ask"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1969
+msgid "Suggested next steps:"
+msgstr ""
+
+#: includes/class-mbr-isa.php:1978
+msgid "Raw response payload (what the widget would receive)"
+msgstr ""
+
+#: mbr-intelligent-site-assistant.php:35
+msgid "Buy %s a coffee"
+msgstr ""
+
+#: mbr-intelligent-site-assistant.php:35
+msgid "the author"
+msgstr ""
+
+#: mbr-intelligent-site-assistant.php:36
+msgid "Buy me a coffee"
+msgstr ""
+
+#. translators: 1: required PHP version, 2: current PHP version
+#: mbr-intelligent-site-assistant.php:57
+msgid "MBR Intelligent Site Assistant requires PHP %1$s or higher. You are running PHP %2$s. The plugin has been disabled."
+msgstr ""
+
+#: mbr-intelligent-site-assistant.php:83
+msgid "MBR Intelligent Site Assistant requires the PHP mbstring extension, which is not enabled on this server. The plugin has been disabled. Most hosts can enable it on request."
+msgstr ""

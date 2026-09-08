@@ -3,11 +3,13 @@
  * Admin UI for chat-widget appearance.
  *
  * Adds a MBR Site Assistant → MBR ISA Appearance page where admins can pick a
- * colour preset and toggle the glassmorphism effect, with an
- * interactive live preview rendered using the actual widget CSS.
+ * colour preset, toggle the glassmorphism effect and set its blur and
+ * opacity, with an interactive live preview rendered using the actual
+ * widget CSS.
  *
- * Storage: writes to keys 'theme_preset' and 'theme_glass' inside the
- * existing mbr_isa_settings option, preserving all other widget settings.
+ * Storage: writes to keys 'theme_preset', 'theme_glass', 'theme_glass_blur'
+ * and 'theme_glass_opacity' inside the existing mbr_isa_settings option,
+ * preserving all other widget settings.
  *
  * @package MBR_ISA
  */
@@ -107,6 +109,30 @@ class MBR_ISA_Admin_Theme {
             [],
             MBR_ISA_VERSION
         );
+
+        /*
+         * The preview's behaviour, extracted from an inline <script> in
+         * 0.9.21. The preset list and the glass bounds used to be printed
+         * into the page with wp_json_encode(); they travel through
+         * wp_localize_script() now, which is what made the script static
+         * enough to move out of the markup at all.
+         */
+        wp_enqueue_script(
+            'mbr-isa-appearance',
+            MBR_ISA_URL . 'assets/js/mbr-isa-appearance.js',
+            [],
+            MBR_ISA_VERSION,
+            true
+        );
+
+        wp_localize_script(
+            'mbr-isa-appearance',
+            'mbrIsaAppearance',
+            [
+                'presetSlugs' => array_keys( $this->get_presets() ),
+                'glassBounds' => MBR_ISA_Frontend::glass_bounds(),
+            ]
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -128,6 +154,8 @@ class MBR_ISA_Admin_Theme {
             $current_preset = 'mocha';
         }
         $current_glass = ! empty( $settings['theme_glass'] );
+        $glass_bounds  = MBR_ISA_Frontend::glass_bounds();
+        $glass_values  = MBR_ISA_Frontend::get_glass_settings();
         $notice        = $this->consume_notice();
         $presets       = $this->get_presets();
 
@@ -147,7 +175,7 @@ class MBR_ISA_Admin_Theme {
 
             <h2 style="margin-top:1.5em;"><?php esc_html_e( 'Live preview', 'mbr-isa' ); ?></h2>
             <div class="mbr-isa-preview-stage" id="mbr-isa-preview-stage">
-                <?php $this->render_preview_widget( $current_preset, $current_glass ); ?>
+                <?php $this->render_preview_widget( $current_preset, $current_glass, $glass_values ); ?>
             </div>
 
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" id="mbr-isa-theme-form" style="max-width:900px;margin-top:2em;">
@@ -185,173 +213,68 @@ class MBR_ISA_Admin_Theme {
                     </span>
                 </label>
 
+                <div class="mbr-isa-glass-sliders" id="mbr-isa-glass-sliders" <?php echo $current_glass ? '' : 'data-disabled="1"'; ?>>
+
+                    <div class="mbr-isa-slider-row">
+                        <label for="mbr-isa-glass-blur">
+                            <strong><?php esc_html_e( 'Blur', 'mbr-isa' ); ?></strong>
+                            <output for="mbr-isa-glass-blur" id="mbr-isa-glass-blur-out"><?php echo esc_html( $glass_values['blur'] ); ?>px</output>
+                        </label>
+                        <input
+                            type="range"
+                            name="theme_glass_blur"
+                            id="mbr-isa-glass-blur"
+                            min="<?php echo esc_attr( $glass_bounds['blur']['min'] ); ?>"
+                            max="<?php echo esc_attr( $glass_bounds['blur']['max'] ); ?>"
+                            step="<?php echo esc_attr( $glass_bounds['blur']['step'] ); ?>"
+                            value="<?php echo esc_attr( $glass_values['blur'] ); ?>"
+                            <?php disabled( ! $current_glass ); ?>
+                        >
+                        <span class="description">
+                            <?php esc_html_e( 'How far the panel blurs what is behind it. Higher costs more to composite while the page scrolls, so keep it modest on image-heavy pages.', 'mbr-isa' ); ?>
+                        </span>
+                    </div>
+
+                    <div class="mbr-isa-slider-row">
+                        <label for="mbr-isa-glass-opacity">
+                            <strong><?php esc_html_e( 'Opacity', 'mbr-isa' ); ?></strong>
+                            <output for="mbr-isa-glass-opacity" id="mbr-isa-glass-opacity-out"><?php echo esc_html( $glass_values['opacity'] ); ?>%</output>
+                        </label>
+                        <input
+                            type="range"
+                            name="theme_glass_opacity"
+                            id="mbr-isa-glass-opacity"
+                            min="<?php echo esc_attr( $glass_bounds['opacity']['min'] ); ?>"
+                            max="<?php echo esc_attr( $glass_bounds['opacity']['max'] ); ?>"
+                            step="<?php echo esc_attr( $glass_bounds['opacity']['step'] ); ?>"
+                            value="<?php echo esc_attr( $glass_values['opacity'] ); ?>"
+                            <?php disabled( ! $current_glass ); ?>
+                        >
+                        <span class="description">
+                            <?php esc_html_e( 'How solid the panel is. Lower lets more of the page through — check your text is still readable over the busiest background it will sit on.', 'mbr-isa' ); ?>
+                        </span>
+                    </div>
+
+                    <p class="description mbr-isa-slider-note">
+                        <?php
+                        printf(
+                            /* translators: 1: default blur in px, 2: default opacity as a percentage. */
+                            esc_html__( 'Both values scale the whole effect — the header, footer and message bubbles keep their proportions to the panel rather than all blurring equally. Defaults are %1$dpx and %2$d%%.', 'mbr-isa' ),
+                            (int) $glass_bounds['blur']['default'],
+                            (int) $glass_bounds['opacity']['default']
+                        );
+                        ?>
+                        <button type="button" class="button-link" id="mbr-isa-glass-reset"><?php esc_html_e( 'Reset to defaults', 'mbr-isa' ); ?></button>
+                    </p>
+                </div>
+
                 <p style="margin-top:2em;">
                     <button type="submit" class="button button-primary"><?php esc_html_e( 'Save appearance', 'mbr-isa' ); ?></button>
                 </p>
             </form>
         </div>
 
-        <style>
-            .mbr-isa-appearance-page .mbr-isa-preview-stage {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-                background-size: 400% 400%;
-                animation: mbr-isa-gradient-shift 18s ease infinite;
-                border-radius: 8px;
-                padding: 32px;
-                min-height: 540px;
-                display: flex;
-                align-items: flex-start;
-                justify-content: center;
-                box-shadow: inset 0 0 60px rgba(0,0,0,0.15);
-                max-width: 900px;
-            }
-            @keyframes mbr-isa-gradient-shift {
-                0%   { background-position: 0% 50%; }
-                50%  { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
-            .mbr-isa-appearance-page .mbr-isa-preview-stage .mbr-isa-chat--inline {
-                width: 380px;
-                max-width: 100%;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preview-stage .mbr-isa-chat--inline .mbr-isa-chat__panel {
-                height: 480px;
-            }
 
-            .mbr-isa-appearance-page .mbr-isa-preset-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-                gap: 12px;
-                max-width: 900px;
-                margin-top: 8px;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-card {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                padding: 12px;
-                background: #fff;
-                border: 2px solid #c3c4c7;
-                border-radius: 6px;
-                cursor: pointer;
-                transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-                position: relative;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-card:hover {
-                border-color: #2271b1;
-                transform: translateY(-1px);
-                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-card.is-selected {
-                border-color: #2271b1;
-                box-shadow: 0 0 0 2px rgba(34,113,177,0.18);
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-card input[type="radio"] {
-                position: absolute;
-                opacity: 0;
-                pointer-events: none;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-swatches {
-                display: flex;
-                gap: 0;
-                height: 40px;
-                border-radius: 4px;
-                overflow: hidden;
-                box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-swatch {
-                flex: 1;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-meta {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-name {
-                font-weight: 600;
-                color: #1d2327;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-kind {
-                font-size: 10px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                padding: 2px 6px;
-                border-radius: 8px;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-kind--dark {
-                background: #1d2327;
-                color: #fff;
-            }
-            .mbr-isa-appearance-page .mbr-isa-preset-kind--light {
-                background: #f0f0f1;
-                color: #1d2327;
-            }
-
-            .mbr-isa-appearance-page .mbr-isa-glass-toggle {
-                display: flex;
-                gap: 12px;
-                align-items: flex-start;
-                background: #fff;
-                border: 1px solid #c3c4c7;
-                border-radius: 6px;
-                padding: 14px 16px;
-                max-width: 600px;
-                cursor: pointer;
-            }
-            .mbr-isa-appearance-page .mbr-isa-glass-toggle input { margin-top: 4px; }
-        </style>
-
-        <script>
-        (function () {
-            var stage   = document.getElementById( 'mbr-isa-preview-stage' );
-            var glassCb = document.getElementById( 'mbr-isa-glass-toggle' );
-            var radios  = document.querySelectorAll( '.mbr-isa-appearance-page input[name="theme_preset"]' );
-            var cards   = document.querySelectorAll( '.mbr-isa-preset-card' );
-            if ( ! stage ) return;
-
-            var presetSlugs = <?php echo wp_json_encode( array_keys( $presets ) ); ?>;
-
-            function applyTheme() {
-                var chat = stage.querySelector( '.mbr-isa-chat' );
-                if ( ! chat ) return;
-
-                // Remove existing theme classes.
-                presetSlugs.forEach( function ( slug ) {
-                    chat.classList.remove( 'mbr-isa-chat--theme-' + slug );
-                } );
-                chat.classList.remove( 'mbr-isa-chat--glass' );
-
-                // Apply selected preset.
-                var selected = document.querySelector( '.mbr-isa-appearance-page input[name="theme_preset"]:checked' );
-                if ( selected ) {
-                    chat.classList.add( 'mbr-isa-chat--theme-' + selected.value );
-                }
-
-                // Apply glass toggle.
-                if ( glassCb && glassCb.checked ) {
-                    chat.classList.add( 'mbr-isa-chat--glass' );
-                }
-
-                // Reflect selection on the preset cards.
-                cards.forEach( function ( c ) {
-                    var input = c.querySelector( 'input[type="radio"]' );
-                    c.classList.toggle( 'is-selected', !! ( input && input.checked ) );
-                } );
-            }
-
-            radios.forEach( function ( r ) { r.addEventListener( 'change', applyTheme ); } );
-            cards.forEach( function ( c ) {
-                c.addEventListener( 'click', function () {
-                    var input = c.querySelector( 'input[type="radio"]' );
-                    if ( input ) {
-                        input.checked = true;
-                        applyTheme();
-                    }
-                } );
-            } );
-            if ( glassCb ) glassCb.addEventListener( 'change', applyTheme );
-        })();
-        </script>
         <?php
     }
 
@@ -362,8 +285,9 @@ class MBR_ISA_Admin_Theme {
      *
      * @param string $preset
      * @param bool   $glass
+     * @param array  $glass_values Blur (px) and opacity (%) for the effect.
      */
-    private function render_preview_widget( $preset, $glass ) {
+    private function render_preview_widget( $preset, $glass, $glass_values = [] ) {
         $classes = [
             'mbr-isa-chat',
             'mbr-isa-chat--inline',
@@ -374,8 +298,18 @@ class MBR_ISA_Admin_Theme {
             $classes[] = 'mbr-isa-chat--glass';
         }
         $classes = array_unique( $classes );
+
+        // Seeded server-side so the preview is correct before any script runs
+        // — the JS then keeps it in step as the sliders move.
+        $blur    = isset( $glass_values['blur'] ) ? (int) $glass_values['blur'] : 20;
+        $opacity = isset( $glass_values['opacity'] ) ? (int) $glass_values['opacity'] : 72;
+        $style   = sprintf(
+            '--mbr-isa-glass-blur: %dpx; --mbr-isa-glass-opacity: %s;',
+            $blur,
+            number_format( $opacity / 100, 2, '.', '' )
+        );
         ?>
-        <div class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>" data-mbr-isa-mode="inline" data-mbr-isa-position="inline">
+        <div class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>" style="<?php echo esc_attr( $style ); ?>" data-mbr-isa-mode="inline" data-mbr-isa-position="inline">
             <div class="mbr-isa-chat__panel" role="dialog" aria-label="Preview">
                 <header class="mbr-isa-chat__header">
                     <h3 class="mbr-isa-chat__title"><?php esc_html_e( 'Site Assistant', 'mbr-isa' ); ?></h3>
@@ -399,8 +333,12 @@ class MBR_ISA_Admin_Theme {
                             // Includes a sample <a> so the link styling is
                             // visible per theme.
                             echo wp_kses(
-                                __( 'You can reach us via the <a href="#" onclick="return false;">contact form</a> in the main menu, or use the link below.', 'mbr-isa' ),
-                                [ 'a' => [ 'href' => true, 'onclick' => true ] ]
+                                __( 'You can reach us via the <a href="#">contact form</a> in the main menu, or use the link below.', 'mbr-isa' ),
+                                // No 'onclick'. The string is translatable, so the value reaching
+			// wp_kses() at runtime comes from whatever .mo file is loaded —
+			// allowing an event handler on it would let a malicious or
+			// compromised translation run script in an administrator's session.
+			[ 'a' => [ 'href' => true ] ]
                             );
                             ?>
                         </div>
@@ -446,6 +384,19 @@ class MBR_ISA_Admin_Theme {
 
         $settings['theme_preset'] = $preset;
         $settings['theme_glass']  = ! empty( $_POST['theme_glass'] ) ? 1 : 0;
+
+        // Saved whether or not glass is currently on, so turning it off and
+        // back on again returns the panel to how it was set rather than to
+        // the defaults. Both are clamped to their published range — a range
+        // input is trivially edited before submission.
+        $settings['theme_glass_blur'] = MBR_ISA_Frontend::sanitize_glass_value(
+            'blur',
+            isset( $_POST['theme_glass_blur'] ) ? wp_unslash( $_POST['theme_glass_blur'] ) : null
+        );
+        $settings['theme_glass_opacity'] = MBR_ISA_Frontend::sanitize_glass_value(
+            'opacity',
+            isset( $_POST['theme_glass_opacity'] ) ? wp_unslash( $_POST['theme_glass_opacity'] ) : null
+        );
 
         update_option( self::OPTION_KEY, $settings );
 

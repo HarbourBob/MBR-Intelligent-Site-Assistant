@@ -1,0 +1,416 @@
+/*
+ * Admin styles for MBR Intelligent Site Assistant.
+ *
+ * Extracted from inline <style> blocks in 0.9.20. Inline styles cannot be
+ * cached and are refused outright by a strict admin Content-Security-Policy,
+ * and there were seven separate blocks across five screens by 0.9.18 — a cost
+ * that rose with every new panel.
+ */
+
+.mbr-isa-btn-spinner {
+    display: none;
+    width: 14px; height: 14px;
+    margin-left: 8px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    vertical-align: middle;
+    animation: mbr-isa-spin 0.8s linear infinite;
+}
+#mbr-isa-reindex-button.is-loading .mbr-isa-btn-spinner { display: inline-block; }
+#mbr-isa-reindex-button.is-loading { opacity: 0.75; cursor: wait; }
+@keyframes mbr-isa-spin { to { transform: rotate(360deg); } }
+#mbr-isa-reindex-status.is-working { color: #cc5500; font-weight: 600; }
+
+/* Chat bubble styling for the diagnostic chat tester */
+.mbr-isa-chat-turn { margin: 0 0 1em; max-width: 800px; }
+.mbr-isa-chat-user {
+    background: #1e88e5; color: #fff;
+    padding: 10px 14px; border-radius: 14px 14px 2px 14px;
+    display: inline-block; max-width: 80%;
+}
+.mbr-isa-chat-bot {
+    background: #2b2b38; color: #cdd6f4;
+    padding: 10px 14px; border-radius: 14px 14px 14px 2px;
+    display: inline-block; max-width: 90%;
+}
+.mbr-isa-chat-meta { color:#999; font-size:11px; margin-top:4px; }
+.mbr-isa-chat-results { margin-top:8px; padding-left:0; list-style:none; }
+.mbr-isa-chat-results li {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 8px 12px; border-radius: 8px; margin-bottom: 6px;
+}
+.mbr-isa-chat-results a { color:#89b4fa; text-decoration: none; font-weight: 600; }
+.mbr-isa-chat-results mark { background:#f9e2af; color:#1e1e2e; padding:0 2px; border-radius:2px; }
+.mbr-isa-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+}
+.mbr-isa-badge-high   { background:#2e7d32; color:#fff; }
+.mbr-isa-badge-medium { background:#f9a825; color:#000; }
+.mbr-isa-badge-low    { background:#ef6c00; color:#fff; }
+.mbr-isa-badge-none   { background:#c62828; color:#fff; }
+.mbr-isa-badge-intent { background:#6a1b9a; color:#fff; }
+
+/* --- Diagnostics tabs (0.9.20) ------------------------------------------ */
+
+.mbr-isa-tabs {
+    margin-bottom: 0;
+}
+
+.mbr-isa-tab-panel {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+    padding: 1px 20px 20px;
+}
+
+/* The first heading in a panel sits directly under the tab strip, so its
+   default top margin reads as a gap in the border rather than as spacing. */
+.mbr-isa-tab-panel > h2:first-of-type {
+    margin-top: 1em;
+}
+
+@media screen and (max-width: 782px) {
+    .mbr-isa-tab-panel {
+        padding: 1px 12px 12px;
+    }
+}
+
+/* --- Anchored cards (0.9.20) -------------------------------------------- */
+
+/*
+ * Saving an intent returns to the card it concerns rather than the top of the
+ * page. The admin bar is fixed, so without an offset the card's heading lands
+ * underneath it and the card looks as though it starts mid-way down.
+ */
+[id^="mbr-isa-intent-"],
+[id^="mbr-isa-synonym-"],
+#mbr-isa-add-intent,
+#mbr-isa-add-synonym {
+    scroll-margin-top: 60px;
+}
+
+@media screen and (max-width: 782px) {
+    [id^="mbr-isa-intent-"],
+    [id^="mbr-isa-synonym-"],
+    #mbr-isa-add-intent,
+    #mbr-isa-add-synonym {
+        scroll-margin-top: 70px;
+    }
+}
+
+
+/* --- Intents screen (extracted from inline <style> in 0.9.21) ----------------- */
+
+.mbr-isa-intents-page .mbr-isa-intent-card {
+    background:#fff;
+    border:1px solid #c3c4c7;
+    border-radius:4px;
+    padding:1em 1.5em;
+    margin:1em 0;
+    max-width:900px;
+    box-shadow:0 1px 1px rgba(0,0,0,.04);
+}
+.mbr-isa-intents-page .mbr-isa-intent-card.is-disabled {
+    opacity:.7;
+    background:#f6f7f7;
+}
+.mbr-isa-intents-page .mbr-isa-intent-card h3 {
+    margin:0 0 .5em;
+    display:flex;
+    align-items:center;
+    gap:.5em;
+}
+.mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-pill {
+    font-size:11px;
+    background:#dcdcde;
+    color:#1d2327;
+    padding:2px 8px;
+    border-radius:10px;
+    font-weight:normal;
+}
+.mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-pill.is-disabled-pill {
+    background:#fcd5d5;
+    color:#8a1f11;
+}
+.mbr-isa-intents-page .mbr-isa-intent-card textarea {
+    width:100%;
+    font-family:Menlo,Consolas,monospace;
+    font-size:13px;
+}
+.mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-row {
+    display:flex;
+    gap:1em;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    margin-bottom:.75em;
+}
+.mbr-isa-intents-page .mbr-isa-intent-card .mbr-isa-row > div { flex:1 1 200px; }
+.mbr-isa-intents-page .mbr-isa-intent-card label.mbr-isa-field-label {
+    display:block;
+    font-weight:600;
+    margin-bottom:4px;
+}
+.mbr-isa-intents-page .mbr-isa-intent-actions {
+    display:flex;
+    gap:.5em;
+    align-items:center;
+    margin-top:1em;
+}
+.mbr-isa-intents-page .mbr-isa-intent-actions form { display:inline; margin:0; }
+.mbr-isa-intents-page .mbr-isa-test-panel {
+    background:#f0f6fc;
+    border:1px solid #c3d4e6;
+    border-radius:4px;
+    padding:1em 1.5em;
+    max-width:900px;
+    margin-top:1em;
+}
+.mbr-isa-intents-page .mbr-isa-test-result {
+    background:#fff;
+    border:1px solid #dcdcde;
+    border-radius:4px;
+    padding:.75em 1em;
+    margin-top:.75em;
+}
+.mbr-isa-intents-page .mbr-isa-test-result.is-no-match {
+    background:#fef8e7;
+    border-color:#dba617;
+}
+
+/* --- Synonyms screen (extracted from inline <style> in 0.9.21) ----------------- */
+
+.mbr-isa-synonyms-page .mbr-isa-synonym-card {
+    background:#fff;
+    border:1px solid #c3c4c7;
+    border-radius:4px;
+    padding:1em 1.5em;
+    margin:1em 0;
+    max-width:900px;
+    box-shadow:0 1px 1px rgba(0,0,0,.04);
+}
+.mbr-isa-synonyms-page .mbr-isa-synonym-card h3 {
+    margin:0 0 .5em;
+    display:flex;
+    align-items:center;
+    gap:.5em;
+    flex-wrap:wrap;
+}
+.mbr-isa-synonyms-page .mbr-isa-synonym-card h3 code {
+    font-size:13px;
+    font-weight:normal;
+    background:#f0f0f1;
+    padding:2px 6px;
+    border-radius:3px;
+}
+.mbr-isa-synonyms-page .mbr-isa-synonym-card textarea {
+    width:100%;
+    font-family:Menlo,Consolas,monospace;
+    font-size:13px;
+}
+.mbr-isa-synonyms-page .mbr-isa-synonym-actions {
+    display:flex;
+    gap:.5em;
+    align-items:center;
+    margin-top:1em;
+}
+.mbr-isa-synonyms-page .mbr-isa-synonym-actions form { display:inline; margin:0; }
+.mbr-isa-synonyms-page .mbr-isa-test-panel {
+    background:#f0f6fc;
+    border:1px solid #c3d4e6;
+    border-radius:4px;
+    padding:1em 1.5em;
+    max-width:900px;
+    margin-top:1em;
+}
+.mbr-isa-synonyms-page .mbr-isa-test-result {
+    background:#fff;
+    border:1px solid #dcdcde;
+    border-radius:4px;
+    padding:.75em 1em;
+    margin-top:.75em;
+}
+.mbr-isa-synonyms-page .mbr-isa-test-result.is-no-expansion {
+    background:#fef8e7;
+    border-color:#dba617;
+}
+.mbr-isa-synonyms-page .mbr-isa-token {
+    display:inline-block;
+    background:#dcdcde;
+    color:#1d2327;
+    padding:2px 8px;
+    margin:2px 4px 2px 0;
+    border-radius:10px;
+    font-size:12px;
+    font-family:Menlo,Consolas,monospace;
+}
+.mbr-isa-synonyms-page .mbr-isa-token.is-added {
+    background:#cde7c4;
+    color:#0a4006;
+}
+.mbr-isa-synonyms-page .mbr-isa-token-original {
+    color:#646970;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:11px;
+    font-weight:normal;
+    margin-left:2px;
+}
+.mbr-isa-synonyms-page .mbr-isa-token.is-added .mbr-isa-token-original {
+    color:#3a6c2f;
+}
+
+/* --- Appearance screen (extracted from inline <style> in 0.9.21) ----------------- */
+
+.mbr-isa-appearance-page .mbr-isa-preview-stage {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background-size: 400% 400%;
+    animation: mbr-isa-gradient-shift 18s ease infinite;
+    border-radius: 8px;
+    padding: 32px;
+    min-height: 540px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.15);
+    max-width: 900px;
+}
+@keyframes mbr-isa-gradient-shift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.mbr-isa-appearance-page .mbr-isa-preview-stage .mbr-isa-chat--inline {
+    width: 380px;
+    max-width: 100%;
+}
+.mbr-isa-appearance-page .mbr-isa-preview-stage .mbr-isa-chat--inline .mbr-isa-chat__panel {
+    height: 480px;
+}
+
+.mbr-isa-appearance-page .mbr-isa-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    max-width: 900px;
+    margin-top: 8px;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: #fff;
+    border: 2px solid #c3c4c7;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    position: relative;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-card:hover {
+    border-color: #2271b1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.mbr-isa-appearance-page .mbr-isa-preset-card.is-selected {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 2px rgba(34,113,177,0.18);
+}
+.mbr-isa-appearance-page .mbr-isa-preset-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-swatches {
+    display: flex;
+    gap: 0;
+    height: 40px;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+}
+.mbr-isa-appearance-page .mbr-isa-preset-swatch {
+    flex: 1;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-name {
+    font-weight: 600;
+    color: #1d2327;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-kind {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 8px;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-kind--dark {
+    background: #1d2327;
+    color: #fff;
+}
+.mbr-isa-appearance-page .mbr-isa-preset-kind--light {
+    background: #f0f0f1;
+    color: #1d2327;
+}
+
+.mbr-isa-appearance-page .mbr-isa-glass-toggle {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    padding: 14px 16px;
+    max-width: 600px;
+    cursor: pointer;
+}
+.mbr-isa-appearance-page .mbr-isa-glass-toggle input { margin-top: 4px; }
+
+.mbr-isa-appearance-page .mbr-isa-glass-sliders {
+    max-width: 600px;
+    margin-top: 12px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    transition: opacity .15s ease;
+}
+.mbr-isa-appearance-page .mbr-isa-glass-sliders[data-disabled] {
+    opacity: .5;
+}
+.mbr-isa-appearance-page .mbr-isa-slider-row + .mbr-isa-slider-row {
+    margin-top: 18px;
+}
+.mbr-isa-appearance-page .mbr-isa-slider-row label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+.mbr-isa-appearance-page .mbr-isa-slider-row output {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: #50575e;
+    min-width: 5ch;
+    text-align: right;
+}
+.mbr-isa-appearance-page .mbr-isa-slider-row input[type="range"] {
+    width: 100%;
+    margin: 6px 0 2px;
+    accent-color: #7c3fbf;
+}
+.mbr-isa-appearance-page .mbr-isa-slider-row .description {
+    display: block;
+}
+.mbr-isa-appearance-page .mbr-isa-slider-note {
+    margin-bottom: 0;
+    padding-top: 14px;
+    border-top: 1px solid #f0f0f1;
+}
+.mbr-isa-appearance-page #mbr-isa-glass-reset {
+    margin-left: 4px;
+}

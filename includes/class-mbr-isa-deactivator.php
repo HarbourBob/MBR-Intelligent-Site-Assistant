@@ -23,5 +23,6 @@ class MBR_ISA_Deactivator {
     public static function deactivate() {
         wp_clear_scheduled_hook( 'mbr_isa_reindex_batch' );
         wp_clear_scheduled_hook( 'mbr_isa_cleanup_query_log' );
+        wp_clear_scheduled_hook( 'mbr_isa_purge_stale_index' );
     }
 }
